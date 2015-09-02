@@ -16,8 +16,7 @@
   },
   "dependencies": {
     "lodash": "^3.10.1",
-    "moment-timezone": "^0.4.0",
-    "timezone": "0.0.41"
+    "moment-timezone": "^0.4.0"
   },
   "browserify": {
     "transform": [
@@ -25,6 +24,8 @@
     ]
   },
   "browserify-shim": {
-    "lodash": "global:_"
+    "lodash": "global:_",
+    "moment-timezone": "global:moment",
+    "moment": "global:moment"
   }
 }

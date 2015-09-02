@@ -1,7 +1,8 @@
 /*jslint node: true */
 "use strict";
 
-var timezone = require('timezone/loaded');
+
+var moment = require('moment-timezone');
 
 var virtualTime = null;
 exports.now = function() {
@@ -36,11 +37,12 @@ exports.int2date = function(d) {
 
 exports.today = function(tz) {
     tz = tz || 'UTC';
-    var dt = exports.now();
 
-    var utcNow = timezone(exports.now());
-    var dateStr = timezone(utcNow,'%Y-%m-%d', tz);
-    return timezone(dateStr) / 86400000;
+    var dt = moment(exports.now()).tz(tz);
+    var dateStr = dt.format('YYYY-MM-DD');
+    var dt2 = new Date(dateStr+'T00:00:00.000Z');
+
+    return dt2.getTime() / 86400000;
 };
 
 
@@ -81,9 +83,12 @@ function matchJob(job, cronDate) {
 
 var cronJobs = [];
 exports.addCronJob = function(job) {
-    var utcNow = timezone(exports.now());
+
+
     job.tz = job.tz || 'UTC';
-    var cronDate = timezone(utcNow,'%M%H%d%m%w', job.tz);
+
+    var dt = moment(exports.now()).tz(job.tz);
+    var cronDate = dt.format('mmHHDDMMd');
     job.last = cronDate;
     job.executing = false;
     cronJobs.push(job);
@@ -98,11 +103,13 @@ exports.deleteCronJob = function(idJob) {
 // it is used to cron any function
 var onMinute = function() {
 
-    var utcNow = timezone(exports.now());
 
     cronJobs.forEach(function(job) {
         if (!job) return;
-        var cronDate = timezone(utcNow,'%M%H%d%m%w', job.tz);
+
+        var dt = moment(exports.now()).tz(job.tz);
+        var cronDate = dt.format('mmHHDDMMd');
+
         if ((cronDate !== job.last) && (matchJob(job, cronDate))) {
             if (job.executing) {
                 console.log("Job takes too long to execute: " + job.name);

@@ -6,7 +6,7 @@ gulp.task('default', function() {
     // Single entry point to browserify
     gulp.src('src/masterutils.js')
         .pipe(browserify({
-          insertGlobals : true,
+          insertGlobals : false,
           debug : !gulp.env.production
         }))
         .pipe(gulp.dest('./dist/'));
