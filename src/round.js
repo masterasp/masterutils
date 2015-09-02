@@ -1,7 +1,7 @@
 /*jslint node: true */
 "use strict";
 
-exports.module = function round(val, roundingType, rounding) {
+module.exports = function round(val, roundingType, rounding) {
     var v;
     if ((!roundingType) || (roundingType === "NONE")) {
         v = Math.round(val / 0.01) * 0.01;
