@@ -7,6 +7,11 @@ var du = require('./date_utils');
 
 var Price = function(lines) {
     if (!lines) lines =[];
+
+    // If another price (has lines)
+    if (lines.lines) {
+        lines = lines.lines;
+    }
     var self = this;
 
 // Clone the array;
