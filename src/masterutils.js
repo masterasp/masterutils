@@ -22,4 +22,8 @@
         root.MasterUtils = MasterUtils;
     }
 
+    if (window) {
+        window.MasterUtils = MasterUtils;
+    }
+
 }());
