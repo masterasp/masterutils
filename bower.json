@@ -1,0 +1,26 @@
+{
+  "name": "masterutils",
+  "version": "0.1.0",
+  "authors": [
+    "Jordi Baylina <jordi@baylina.cat>"
+  ],
+  "description": "masterASP js basic library",
+  "main": "dist/masterutils.js",
+  "moduleType": [
+    "globals",
+    "node"
+  ],
+  "license": "Unlicense",
+  "homepage": "www.masterasp.com",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "lodash": "~3.10.1",
+    "timezone": "~0.0.41"
+  }
+}

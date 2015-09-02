@@ -1,0 +1,29 @@
+{
+  "name": "masterutils",
+  "version": "1.0.0",
+  "description": "masterASP basic javascript utilities",
+  "main": "src/masterutils.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jordi Baylina",
+  "license": "Unlicense",
+  "devDependencies": {
+    "browserify": "^11.0.1",
+    "browserify-shim": "^3.8.10",
+    "gulp": "^3.9.0",
+    "gulp-browserify": "^0.5.1"
+  },
+  "dependencies": {
+    "lodash": "^3.10.1",
+    "timezone": "0.0.41"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browserify-shim": {
+    "lodash": "global:_"
+  }
+}
