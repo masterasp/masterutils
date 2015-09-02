@@ -3,10 +3,10 @@
 (function() {
     "use strict";
 
-    var MasterUtils = {
+    var masterUtils = {
         dateUtils: require('./date_utils.js'),
         round: require('./round.js'),
-        price:  require('./Price.js')
+        Price:  require('./Price.js')
     };
 
     var root = typeof self === 'object' && self.self === self && self ||
@@ -15,15 +15,15 @@
 
     if (typeof exports !== 'undefined') {
         if (typeof module !== 'undefined' && module.exports) {
-          exports = module.exports = MasterUtils;
+          exports = module.exports = masterUtils;
         }
-        exports.MasterUtils = MasterUtils;
+        exports.masterUtils = masterUtils;
     } else {
-        root.MasterUtils = MasterUtils;
+        root.masterUtils = masterUtils;
     }
 
     if (window) {
-        window.MasterUtils = MasterUtils;
+        window.masterUtils = masterUtils;
     }
 
 }());
