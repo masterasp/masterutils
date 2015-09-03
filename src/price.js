@@ -32,10 +32,29 @@ var Price = function(lines) {
         options = _.extend({
             withTaxes: true,
             withDiscounts: true,
-            rounded: true
+            rounded: true,
+            base: 0
         }, options);
 
-        var lineImport = line.price * line.quantity;
+        var price;
+        if (typeof line.price === "number") {
+            price = line.price;
+        } else if ( (line.price==="object") && (line.price.type === 'ESC') ) {
+            price = options.base * line.price.pricePC;
+            if (price<line.price.priceMin) price = line.price.priceMin;
+        } else if ( (line.price==="object") && (line.price.type === 'ESC') ) {
+            price=Number.MAX_VALUE;
+            _.each(line.price.scalePrices, function(sp) {
+                if ((base <= sp.stayPriceMax) && (sp.price < price)) {
+                    price = sp.price;
+                }
+            });
+            if (price === Number.MAX_VALUE) {
+                price = NaN;
+            }
+        }
+
+        var lineImport = price * line.quantity;
         if (!isNaN(line.periods)) {
             lineImport = lineImport * line.periods;
         }
