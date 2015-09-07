@@ -106,7 +106,7 @@ Price.prototype.getImport = function(options) {
     return ac;
 };
 
-Price.addPrice = function(p) {
+Price.prototype.addPrice = function(p) {
         var self = this;
         if (!p) return;
         _.each(p.lines, function(l) {
