@@ -27,7 +27,7 @@ Price.prototype.toJSON = function() {
     return obj;
 };
 
-Price.prototype.lineImport = function(line, options) {
+Price.prototype.linePrice = function(line, options) {
     options = options || {};
     options = _.extend({
         withTaxes: true,
@@ -45,7 +45,7 @@ Price.prototype.lineImport = function(line, options) {
     } else if ( (typeof line.price==="object") && (line.price.type === 'ESC') ) {
         price=Number.MAX_VALUE;
         _.each(line.price.scalePrices, function(sp) {
-            if ((base <= sp.stayPriceMax) && (sp.price < price)) {
+            if ((options.base <= sp.stayPriceMax) && (sp.price < price)) {
                 price = sp.price;
             }
         });
@@ -53,6 +53,21 @@ Price.prototype.lineImport = function(line, options) {
             price = NaN;
         }
     }
+
+    return price;
+};
+
+
+Price.prototype.lineImport = function(line, options) {
+    options = options || {};
+    options = _.extend({
+        withTaxes: true,
+        withDiscounts: true,
+        rounded: true,
+        base: 0
+    }, options);
+
+    var price = this.linePrice(line,options);
 
     var lineImport = price * line.quantity;
     if (!isNaN(line.periods)) {
