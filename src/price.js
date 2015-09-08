@@ -39,7 +39,7 @@ Price.prototype.lineImport = function(line, options) {
     var price;
     if (typeof line.price === "number") {
         price = line.price;
-    } else if ( (line.price==="object") && (line.price.type === 'ESC') ) {
+    } else if ( (line.price==="object") && (line.price.type === 'PER') ) {
         price = options.base * line.price.pricePC;
         if (price<line.price.priceMin) price = line.price.priceMin;
     } else if ( (line.price==="object") && (line.price.type === 'ESC') ) {
