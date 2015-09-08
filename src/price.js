@@ -39,10 +39,10 @@ Price.prototype.lineImport = function(line, options) {
     var price;
     if (typeof line.price === "number") {
         price = line.price;
-    } else if ( (line.price==="object") && (line.price.type === 'PER') ) {
+    } else if ( (typeof line.price==="object") && (line.price.type === 'PER') ) {
         price = options.base * line.price.pricePC;
         if (price<line.price.priceMin) price = line.price.priceMin;
-    } else if ( (line.price==="object") && (line.price.type === 'ESC') ) {
+    } else if ( (typeof line.price==="object") && (line.price.type === 'ESC') ) {
         price=Number.MAX_VALUE;
         _.each(line.price.scalePrices, function(sp) {
             if ((base <= sp.stayPriceMax) && (sp.price < price)) {
