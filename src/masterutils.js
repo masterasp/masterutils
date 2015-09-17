@@ -22,7 +22,7 @@
         root.masterUtils = masterUtils;
     }
 
-    if (window) {
+    if (typeof window !== "undefined") {
         window.masterUtils = masterUtils;
     }
 
