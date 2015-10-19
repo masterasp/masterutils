@@ -124,8 +124,9 @@ Price.prototype.getImport = function(options) {
 Price.prototype.addPrice = function(p) {
         var self = this;
         if (!p) return;
-        _.each(p.lines, function(l) {
-            self.lines.push(_.clone(l));
+        var cp = _.clone(p);
+        _.each(cp.lines, function(l) {
+            self.lines.push(l);
         });
 };
 
