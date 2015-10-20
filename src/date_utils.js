@@ -22,15 +22,25 @@ exports.date2str = function (d) {
 };
 
 exports.date2int = function(d) {
+        if (typeof d === "number") {
+            return d;
+        }
         return Math.floor(d.getTime() / 86400000);
 };
 
+
 exports.intDate2str = function(d) {
-    var dt = new Date(d*86400000);
+    var dt;
+    if (d instanceof Date) {
+        dt = d;
+    } else {
+        dt = new Date(d*86400000);
+    }
     return dt.toISOString().substring(0,10);
 };
 
 exports.int2date = function(d) {
+    if (d instanceof Date) return d;
     var dt = new Date(d*86400000);
     return dt;
 };

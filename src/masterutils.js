@@ -6,7 +6,8 @@
     var masterUtils = {
         dateUtils: require('./date_utils.js'),
         round: require('./round.js'),
-        Price:  require('./Price.js')
+        Price:  require('./Price.js'),
+        Price2: require('./Price2.js'),
     };
 
     var root = typeof self === 'object' && self.self === self && self ||

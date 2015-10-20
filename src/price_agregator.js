@@ -17,7 +17,7 @@ Agregate Modifier
 
 var PriceAgregator = function(line) {
     this.line = line;
-    this.execOrder = line.execOrder || 0;
+    this.execOrder = line.execOrder || 5;
     this.groupBy = line.groupBy;
 };
 
@@ -26,15 +26,16 @@ PriceAgregator.prototype.modify = function(tree) {
     var newNode = _.clone(this.line);
     newNode.childs = [];
     var i,l;
-    for (i=0; i<tree.length; i+=1) {
-        l=tree[i];
-        if (_.contain(l.flags, self.groupBy)) {
+    for (i=0; i<tree.childs.length; i+=1) {
+        l=tree.childs[i];
+        if (_.contains(l.attributes, self.groupBy)) {
             newNode.childs.push(l);
-            tree[i] = tree[tree.length-1];
-            tree.pop();
+            tree.childs[i] = tree.childs[tree.childs.length-1];
+            tree.childs.pop();
+            i-=1;
         }
     }
-    tree.push(newNode);
+    tree.childs.push(newNode);
 };
 
 module.exports = PriceAgregator;

@@ -3,6 +3,7 @@
 
 var _=require('lodash');
 var round = require('./round');
+var du = require('./date_utils');
 
 /*
 // VISUALIZATION FLAGS IN EACH NODE
@@ -18,7 +19,8 @@ var round = require('./round');
 
 var registeredModifiers = {
     "AGREGATOR": require("./price_agregator.js"),
-    "LINE": require("./price_line.js")
+    "LINE": require("./price_line.js"),
+    "VATINCLUDED": require("./price_vatincluded.js")
 };
 
 var Price2 = function(lines) {
@@ -39,20 +41,29 @@ var Price2 = function(lines) {
 Price2.prototype.addPrice = function(p) {
     var self = this;
     if (!p) return;
-    var cp = _.clone(p);
-    _.each(cp.lines, function(l) {
-        self.lines.push(l);
+    var cp;
+    if ((typeof p === "object")&& (p.lines)) {
+        cp = p.lines;
+    } else if (cp instanceof Array) {
+        cp = p;
+    } else if (typeof p === "object") {
+        cp = [p];
+    }
+    _.each(cp, function(l) {
+        self.lines.push(_.clone(l));
     });
-    this.treeValid=false;
-    this.renderValid = false;
+    self.treeValid=false;
+    self.renderValid = false;
 };
 
 
 Price2.prototype.constructTree = function() {
 
+    var self = this;
+
     function sortTree(node) {
         if (node.childs) {
-            _.sortBy(node.childs, ["order", "suborder"]);
+            node.childs = _.sortByAll(node.childs, ["order", "suborder"]);
             _.each(node.childs, sortTree);
         }
     }
@@ -72,11 +83,11 @@ Price2.prototype.constructTree = function() {
         _.each(node.childs, roundImports);
     }
 
-    if (this.treeValid) {
-        return this.total;
+    if (self.treeValid) {
+        return self.total;
     }
 
-    this.total = {
+    self.total = {
         id: "total",
         label: "@Total",
         childs: [],
@@ -89,36 +100,35 @@ Price2.prototype.constructTree = function() {
 
     var i =0;
 
-    _.each(this.lines, function(l) {
+    _.each(self.lines, function(l) {
         l.suborder = i++;               // suborder is the original order. In case of tie use this.
         l.class = l.class || "LINE";
         if (!registeredModifiers[l.class]) {
             throw new Error("Modifier " + l.class + " not defined.");
         }
         var modifier = new registeredModifiers[l.class](l);
-        modifiers.push(l);
+        modifiers.push(modifier);
     });
 
     modifiers = _.sortBy(modifiers, "execOrder");
 
     _.each(modifiers, function(m) {
-        var modifier = new registeredModifiers[m.class](m);
-        modifier.modify(this.root);
+        m.modify(self.total);
     });
 
-    sortTree(this.root);
+    sortTree(self.total);
 
-    calcTotal(this.root);
-    roundImports(this.root);
+    calcTotal(self.total);
+    roundImports(self.total);
 
-    this.treeValid = true;
-    return this.total;
+    self.treeValid = true;
+    return self.total;
 };
 
 Price2.prototype.render = function() {
 
     var self = this;
-    this.render = [];
+    self.render = [];
 
 
 /*
@@ -145,9 +155,17 @@ Price2.prototype.render = function() {
         if (node.hideDetail) renderDetail= false;
         if (node.hideTotal) renderTotal=false;
 
-        if ((renderTotal) && (!node.totalOnButton)) {
-            node.level = level;
-            self.render.push(node);
+        var newNode = _.clone(node);
+        delete newNode.childs;
+        delete newNode.showIfZero;
+        delete newNode.hideDetail;
+        delete newNode.hideTotal;
+        delete newNode.ifOneHideParent;
+        delete newNode.ifOneHideChild;
+        newNode.level = level;
+
+        if ((renderTotal) && (!node.totalOnBottom)) {
+            self.render.push(newNode);
         }
 
         if (renderDetail) {
@@ -155,21 +173,20 @@ Price2.prototype.render = function() {
                 renderNode(childNode, renderTotal ? level +1 : level);
             });
         }
-        if ((renderTotal) && (node.totalOnButton)) {
-            node.level = level;
-            self.render.push(node);
+        if ((renderTotal) && (node.totalOnBottom)) {
+            self.render.push(newNode);
         }
     }
 
-    if (this.renderValid) {
-        return this.render;
+    if (self.renderValid) {
+        return self.render;
     }
-    this.constructTree();
+    self.constructTree();
 
-    renderNode(this.total);
+    renderNode(self.total, 0);
 
-    this.renderValid = true;
-    return this.render;
+    self.renderValid = true;
+    return self.render;
 };
 
 function findNode(node, id) {
@@ -185,16 +202,47 @@ function findNode(node, id) {
 }
 
 Price2.prototype.getImport = function(id) {
+    var self = this;
     id = id || "total";
-    this.constructTree();
+    self.constructTree();
 
-    var node = findNode(this.total, id);
+    var node = findNode(self.total, id);
 
     if (node) {
         return node.import;
     } else {
         return 0;
     }
+};
+
+Price2.prototype.addAttributes = function(atribute) {
+    var self=this;
+    var attrs;
+    if (typeof atribute === "string" ) {
+        attrs = [atribute];
+    } else if (atribute instanceof Array) {
+        attrs = atribute;
+    } else {
+        throw new Error("Invalid Attribute");
+    }
+    _.each(attrs, function(a) {
+        _.each(self.lines, function(l) {
+            if (!l.attributes) l.attributes = [];
+            if (!_.contains(l.attributes, a)) {
+                l.attributes.push(a);
+            }
+        });
+    });
+};
+
+Price2.prototype.toJSON = function() {
+    var obj = {};
+    obj.lines = _.map(this.lines, _.clone);
+    _.each(obj.lines, function(l) {
+        if (typeof l.from === "number") l.from = du.int2date(l.from);
+        if (typeof l.to === "number") l.to = du.int2date(l.to);
+    });
+    return obj;
 };
 
 

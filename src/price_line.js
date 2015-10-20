@@ -9,7 +9,16 @@ var PriceLine = function(line) {
 };
 
 PriceLine.prototype.modify = function(tree) {
-    tree.push(_.clone(this.line));
+    var l = _.clone(this.line);
+
+    var price = l.price;
+
+    l.import = price * l.quantity;
+    if (!isNaN(l.periods)) {
+        l.import = l.import * l.periods;
+    }
+
+    tree.childs.push(l);
 };
 
 module.exports = PriceLine;
