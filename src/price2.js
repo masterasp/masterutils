@@ -23,19 +23,26 @@ var registeredModifiers = {
     "VATINCLUDED": require("./price_vatincluded.js")
 };
 
-var Price2 = function(lines) {
-    if (!lines) lines =[];
+var Price2 = function(p1, p2) {
+    var self = this;
+    self.lines = [];
+    self.options = {};
+    _.each(arguments, function(p) {
+        if (p) {
+            if ((typeof p === "object")&&(p.lines)) {
+                self.lines.concat(_.map(p.lines, _.clone));
+            } else if (p instanceof Array) {
+                self.lines.concat(_.map(p, _.clone));
+            } else if ((typeof p === "object")&&(p.class || p.label)) {
+                self.lines.push(_.clone(p));
+            } else if (typeof p === "object") {
+                self.options = p;
+            }
+        }
+    });
 
-    // If another price (has lines)
-    if (lines.lines) {
-        lines = lines.lines;
-    }
-
-// Clone the array;
-    this.lines = _.map(lines, _.clone);
-
-    this.treeValid=false;
-    this.renderValid=false;
+    self.treeValid=false;
+    self.renderValid=false;
 };
 
 Price2.prototype.addPrice = function(p) {
@@ -113,7 +120,7 @@ Price2.prototype.constructTree = function() {
     modifiers = _.sortBy(modifiers, "execOrder");
 
     _.each(modifiers, function(m) {
-        m.modify(self.total);
+        m.modify(self.total, self.options);
     });
 
     sortTree(self.total);
