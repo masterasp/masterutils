@@ -9,7 +9,7 @@
         Price:  require('./price.js'),
         Price2: require('./price2.js'),
         checks: {
- //           checkCreditCard: require('./creditcard.js').checkCreditCard
+            checkCreditCard: require('./creditcard.js').checkCreditCard
         }
     };
 
