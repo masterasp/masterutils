@@ -22,6 +22,8 @@ PriceLine.prototype.modify = function(tree) {
         l.import = l.import * (1 - l.discount/100);
     }
 
+    l.baseImport = l.import;
+
     tree.childs.push(l);
 };
 
