@@ -13,9 +13,13 @@ PriceLine.prototype.modify = function(tree) {
 
     var price = l.price;
 
-    l.import = price * l.quantity;
+    l.import = l.price * l.quantity;
     if (!isNaN(l.periods)) {
         l.import = l.import * l.periods;
+    }
+
+    if (l.discount) {
+        l.import = l.import * (1 - l.discount/100);
     }
 
     tree.childs.push(l);

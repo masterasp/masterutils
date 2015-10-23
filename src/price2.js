@@ -114,10 +114,11 @@ Price2.prototype.constructTree = function() {
             throw new Error("Modifier " + l.class + " not defined.");
         }
         var modifier = new registeredModifiers[l.class](l);
+        modifier.suborder = i;
         modifiers.push(modifier);
     });
 
-    modifiers = _.sortBy(modifiers, "execOrder");
+    modifiers = _.sortByAll(modifiers, ["execOrder", "execSubOrder", "suborder"]);
 
     _.each(modifiers, function(m) {
         m.modify(self.total, self.options);
