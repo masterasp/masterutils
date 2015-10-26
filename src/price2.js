@@ -244,6 +244,9 @@ Price2.prototype.renderTree = function() {
 
             if (parentNode === null) {
                 self.renderTreeResult = newNode;
+                newNode.level=0;
+            } else {
+                newNode.level = parentNode.level +1;
             }
         }
 
