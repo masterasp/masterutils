@@ -292,7 +292,7 @@ Price2.prototype.renderTree = function() {
 
     renderTreeNode(self.total, null);
 
-    setLevel(self.renderTreeResult, 1);
+    setLevel(self.renderTreeResult, 0);
 
     self.renderTreeValid = true;
     return self.renderTreeResult;
