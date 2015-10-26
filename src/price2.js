@@ -137,7 +137,7 @@ Price2.prototype.constructTree = function() {
 Price2.prototype.render = function() {
 
     var self = this;
-    self.renderResult = [];
+
 
 
 /*
@@ -190,6 +190,9 @@ Price2.prototype.render = function() {
     if (self.renderValid) {
         return self.renderResult;
     }
+
+    self.renderResult = [];
+
     self.constructTree();
 
     renderNode(self.total, 0);
