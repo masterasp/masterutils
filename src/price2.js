@@ -280,6 +280,8 @@ Price2.prototype.renderTree = function() {
 
     self.constructTree();
 
+    self.renderTreeResult = null;
+
     renderTreeNode(self.total, null);
 
     self.renderTreeValid = true;
