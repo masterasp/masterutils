@@ -159,7 +159,7 @@ Price2.prototype.render = function() {
         var renderTotal = true;
         var renderDetail = true;
         if ((!node.showIfZero) && (node.import === 0)) renderTotal = false;
-        if ((node.childs)&&(node.childs.length === 1)) {
+        if ((node.childs)&&(node.childs.length === 1)&&(!node.hideDetail)) {
             if (node.ifOneHideParent) renderTotal = false;
             if (node.ifOneHideChild) renderDetail = false;
         }
@@ -227,7 +227,7 @@ Price2.prototype.renderTree = function() {
         var renderTotal = true;
         var renderDetail = true;
         if ((!node.showIfZero) && (node.import === 0)) renderTotal = false;
-        if ((node.childs)&&(node.childs.length === 1)) {
+        if ((node.childs)&&(node.childs.length === 1)&&(!node.hideDetail)) {
             if (node.ifOneHideParent) renderTotal = false;
             if (node.ifOneHideChild) renderDetail = false;
         }
