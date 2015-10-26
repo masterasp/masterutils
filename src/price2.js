@@ -260,9 +260,6 @@ Price2.prototype.renderTree = function() {
 
             if (parentNode === null) {
                 self.renderTreeResult = newNode;
-                newNode.level=0;
-            } else {
-                newNode.level = parentNode.level +1;
             }
         } else {
             if (!parentNode) {
@@ -278,6 +275,13 @@ Price2.prototype.renderTree = function() {
 
     }
 
+    function setLevel(node, level) {
+        node.level = level;
+        _.each(node.childs, function(n) {
+            setLevel(n, level+1);
+        });
+    }
+
     if (self.renderTreeValid) {
         return self.renderTreeResult;
     }
@@ -286,8 +290,9 @@ Price2.prototype.renderTree = function() {
 
     self.renderTreeResult = null;
 
-    self.total.level = 1;
     renderTreeNode(self.total, null);
+
+    setLevel(self.renderTreeResult, 0);
 
     self.renderTreeValid = true;
     return self.renderTreeResult;
