@@ -229,7 +229,7 @@ Price2.prototype.renderTree = function() {
         newNode.childs = [];
 
         _.each(node.childs, function(childNode) {
-            renderTreeNode(childNode, renderTotal ? newNode : parentNode);
+            renderTreeNode(childNode, newNode);
         });
 
         var renderTotal = true;
