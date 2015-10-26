@@ -241,6 +241,10 @@ Price2.prototype.renderTree = function() {
             if (parentNode) {
                 parentNode.childs.push(newNode);
             }
+
+            if (parentNode === null) {
+                self.renderTreeResult = newNode;
+            }
         }
 
         if (renderDetail) {
