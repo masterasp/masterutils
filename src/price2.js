@@ -224,20 +224,32 @@ Price2.prototype.renderTree = function() {
 
     function renderTreeNode(node, parentNode) {
 
+
+        var newNode = _.clone(node);
+        newNode.childs = [];
+
+        _.each(node.childs, function(childNode) {
+            renderTreeNode(childNode, renderTotal ? newNode : parentNode);
+        });
+
         var renderTotal = true;
         var renderDetail = true;
         if ((!node.showIfZero) && (node.import === 0)) renderTotal = false;
-        if ((node.childs)&&(node.childs.length === 1)&&(!node.hideDetail)) {
+        if ((newNode.childs.length === 1)&&(!node.hideDetail)) {
             if (node.ifOneHideParent) renderTotal = false;
             if (node.ifOneHideChild) renderDetail = false;
         }
         if (node.hideDetail) renderDetail= false;
         if (node.hideTotal) renderTotal=false;
 
-        if (renderTotal) {
-            var newNode = _.clone(node);
+        //            newNode.parent = parentNode;
+
+        if (!renderDetail) {
             newNode.childs = [];
-//            newNode.parent = parentNode;
+        }
+
+
+        if (renderTotal) {
             if (parentNode) {
                 parentNode.childs.push(newNode);
             }
@@ -248,13 +260,18 @@ Price2.prototype.renderTree = function() {
             } else {
                 newNode.level = parentNode.level +1;
             }
-        }
-
-        if (renderDetail) {
-            _.each(node.childs, function(childNode) {
-                renderTreeNode(childNode, renderTotal ? newNode : parentNode);
+        } else {
+            if (!parentNode) {
+                parentNode = {
+                    childs: [],
+                    hideTotal: true
+                };
+            }
+            _.each(newNode.childs, function(n) {
+                parentNode.childs.push(n);
             });
         }
+
     }
 
     if (self.renderTreeValid) {
