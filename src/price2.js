@@ -31,9 +31,13 @@ var Price2 = function(p1, p2) {
     _.each(arguments, function(p) {
         if (p) {
             if ((typeof p === "object")&&(p.lines)) {
-                self.lines.concat(_.map(p.lines, _.clone));
+                _.each(p.lines, function(l) {
+                    self.lines.push(_.clone(l));
+                });
             } else if (p instanceof Array) {
-                self.lines.concat(_.map(p, _.clone));
+                _.each(p, function(l) {
+                    self.lines.push(_.clone(l));
+                });
             } else if ((typeof p === "object")&&(p.class || p.label)) {
                 self.lines.push(_.clone(p));
             } else if (typeof p === "object") {
