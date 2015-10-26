@@ -5,7 +5,7 @@ var _=require('lodash');
 
 var PriceVat = function(line) {
     this.line = line;
-    this.execOrder = line.execOrder || 9;
+    this.execOrder = line.execOrder || 7;
     this.id = line.id || "vat";
     this.label = line.label || "@VAT";
     this.order = line.order || 9;

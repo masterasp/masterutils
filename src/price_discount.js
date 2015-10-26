@@ -49,7 +49,10 @@ PriceDiscount.prototype.modify = function(tree, options) {
 
 
     function proportionApply(iIn, iOut, iApplyFrom, iApplyTo) {
-
+        var a = iIn > iApplyFrom ? iIn : iApplyFrom;
+        var b = iOut < iApplyTo ? iOut : iApplyTo;
+        if (b>a) return 0;
+        return (b-a)/(iOut-iIn);
     }
 
     function lineFromRule(rule) {

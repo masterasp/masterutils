@@ -20,7 +20,8 @@ var du = require('./date_utils');
 var registeredModifiers = {
     "AGREGATOR": require("./price_agregator.js"),
     "LINE": require("./price_line.js"),
-    "VATINCLUDED": require("./price_vatincluded.js")
+    "VATINCLUDED": require("./price_vatincluded.js"),
+    "DISCOUNT": require("./price_discount.js")
 };
 
 var Price2 = function(p1, p2) {
@@ -136,7 +137,7 @@ Price2.prototype.constructTree = function() {
 Price2.prototype.render = function() {
 
     var self = this;
-    self.render = [];
+    self.renderResult = [];
 
 
 /*
@@ -173,7 +174,7 @@ Price2.prototype.render = function() {
         newNode.level = level;
 
         if ((renderTotal) && (!node.totalOnBottom)) {
-            self.render.push(newNode);
+            self.renderResult.push(newNode);
         }
 
         if (renderDetail) {
@@ -182,19 +183,19 @@ Price2.prototype.render = function() {
             });
         }
         if ((renderTotal) && (node.totalOnBottom)) {
-            self.render.push(newNode);
+            self.renderResult.push(newNode);
         }
     }
 
     if (self.renderValid) {
-        return self.render;
+        return self.renderResult;
     }
     self.constructTree();
 
     renderNode(self.total, 0);
 
     self.renderValid = true;
-    return self.render;
+    return self.renderResult;
 };
 
 function findNode(node, id) {
