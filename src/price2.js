@@ -237,7 +237,7 @@ Price2.prototype.renderTree = function() {
         if (renderTotal) {
             var newNode = _.clone(node);
             newNode.childs = [];
-            newNode.parent = parentNode;
+//            newNode.parent = parentNode;
             if (parentNode) {
                 parentNode.childs.push(newNode);
             }
