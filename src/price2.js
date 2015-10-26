@@ -44,6 +44,7 @@ var Price2 = function(p1, p2) {
 
     self.treeValid=false;
     self.renderValid=false;
+    self.renderTreeValid=false;
 };
 
 Price2.prototype.addPrice = function(p) {
@@ -62,6 +63,7 @@ Price2.prototype.addPrice = function(p) {
     });
     self.treeValid=false;
     self.renderValid = false;
+    self.renderTreeValid = false;
 };
 
 
@@ -199,6 +201,65 @@ Price2.prototype.render = function() {
 
     self.renderValid = true;
     return self.renderResult;
+};
+
+
+Price2.prototype.renderTree = function() {
+
+    var self = this;
+
+
+
+/*
+// VISUALIZATION FLAGS IN EACH NODE
+    showIfZero:         Show even if Total is zero
+    ifOneHideParent:    If this group has only one child, remove this group and
+                        replace it with the chald
+    ifOneHideChild:     If this group has only one child, remove the child
+    hideTotal:          Just remove  the total and put all the childs
+    totalOnBottom:         Put the Total on the dop
+    hideDetail:         Do not show the details
+*/
+
+
+    function renderTreeNode(node, parentNode) {
+
+        var renderTotal = true;
+        var renderDetail = true;
+        if ((!node.showIfZero) && (node.import === 0)) renderTotal = false;
+        if ((node.childs)&&(node.childs.length === 1)) {
+            if (node.ifOneHideParent) renderTotal = false;
+            if (node.ifOneHideChild) renderDetail = false;
+        }
+        if (node.hideDetail) renderDetail= false;
+        if (node.hideTotal) renderTotal=false;
+
+        if (renderTotal) {
+            var newNode = _.clone(node);
+            newNode.childs = [];
+            newNode.parent = parentNode;
+            if (parentNode) {
+                parentNode.childs.push(newNode);
+            }
+        }
+
+        if (renderDetail) {
+            _.each(node.childs, function(childNode) {
+                renderTreeNode(childNode, renderTotal ? newNode : parentNode);
+            });
+        }
+    }
+
+    if (self.renderTreeValid) {
+        return self.renderTreeResult;
+    }
+
+    self.constructTree();
+
+    renderTreeNode(self.total, null);
+
+    self.renderTreeValid = true;
+    return self.renderTreeResult;
 };
 
 function findNode(node, id) {
