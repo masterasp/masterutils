@@ -54,7 +54,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
         if (b>a) return 0;
         return (b-a)/(iOut-iIn);
     }
-
+/*
     function lineFromRule(rule) {
         var newLine = _.clone(self.line);
         var proportion;
@@ -64,7 +64,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
 
         _.each(tree.childs, function(l) {
             if (! _.contains(l.attributes, rule.applyIdConceptAtribute)) return;
-            if (l.baseImport) return;
+            if (! l.baseImport) return;
 
             if (rule.applicationType === "WHOLE") {
                 proportion = 1;
@@ -104,7 +104,39 @@ PriceDiscount.prototype.modify = function(tree, options) {
 
         return newLine;
     }
+*/
 
+    function daysInRule(line, rule) {
+        var a,b,i;
+        var days = [];
+        var lFrom = l.from ? du.date2int(l.from) : du.date2int(options.checkin);
+        var lTo = l.to ? du.date2int(l.to) : du.date2int(options.checkout);
+        if (rule.applicationType === "WHOLE") {
+            a = lFrom;
+            b = lTo;
+        } else if (rule.applicationType === "BYDAY") {
+            var rFrom = du.date2int(rule.applyFrom);
+            var rTo = du.date2int(rule.applyTo);
+
+            a = Math.max(rFrom, lFrom);
+            b = Math.min(rTo, lTo);
+        }
+        for (i=a; i<b; i+=1) {
+            days.push(i);
+        }
+        return days;
+    }
+
+    function daysInLine(line) {
+        var i;
+        var days = [];
+        var lFrom = l.from ? du.date2int(l.from) : du.date2int(options.checkin);
+        var lTo = l.to ? du.date2int(l.to) : du.date2int(options.checkout);
+        for (i=lFrom; i<lTo; i+=1) {
+            days.push(i);
+        }
+        return days;
+    }
 
     var samePhaseDiscounts = [];
     var postponedDiscounts = [];
@@ -127,26 +159,75 @@ PriceDiscount.prototype.modify = function(tree, options) {
         }
     }
 
-    var appliedRules = _.filter(this.rules, ruleDoesApply);
+    var appliedRules = _.filter(self.lines.rules, ruleDoesApply);
 
-    var bestLine = _.reduce(appliedRules, function(bestLine, rule) {
-        var l = lineFromRule(rule);
-        if (!bestLine) return l;
-        return (l.import < bestLine.import) ? l : bestLine;
+    // This hash contains the best discount for each line and day
+    // discountPerDay['3|18475']= 15 Means that the line tree[3] will applys
+    // a 15% discount at day 18475
+    var discountPerDay = {};
+    _.each(appliedRules, function(discountPerDay, rule) {
+        _.each(tree.childs, function(l, lineIdx) {
+            _.each(daysInRule(l, rule), function(d) {
+                var k= lineIdx+'|'+d;
+                if (!discountPerDay[k]) discountPerDay[k]=0;
+                discountPerDay[k] = Math.max(discountPerDay[k], rule.applyDiscountPC);
+            });
+        });
     });
 
-    if (bestLine) {
-        samePhaseDiscounts.push(bestLine);
+    var vat =0;
+    var base =0;
+    var totalImport =0;
 
-        var bestLineInPhase = _.reduce(samePhaseDiscounts, function(bestLine, line) {
-            if (!line) return bestLine;
-            return (line.import < bestLine.import) ? line : bestLine;
+    _.each(tree.childs, function(l, lineIdx) {
+        var dsc=0;
+        var n =0;
+        _.each(daysInLine(l), function(d) {
+            var k= lineIdx+'|'+d;
+            if (discountPerDay[k]) {
+                dsc += discountPerDay[k];
+            }
+            n+=1;
+        });
+        if (n === 0) return;
+        dsc = dsc / n;
+
+        var lVat = 0;
+        _.each(l.taxes, function(tax) {
+            if (tax.type === "VAT") {
+                lVat = tax.PC;
+            }
         });
 
-        tree.childs.push(bestLineInPhase);
+        vat = (vat*base + lVat*l.baseImport*dsc/100) / (base + l.baseImport*dsc/100);
+        base = base + l.baseImport * dsc/100;
+    });
 
-        postponedDiscounts = _.sortBy(postponedDiscounts, 'phase');
+    var bestLine = _.clone(self.line);
+
+    bestLine.import = -base;
+
+    bestLine.taxes = bestLine.taxes || [];
+
+    var tax = _.findWhere(bestLine.taxes,{type: "VAT"});
+    if (!tax) {
+        tax = {
+            type: "VAT"
+        };
+        bestLine.taxes.push = tax;
     }
+    tax.PC = vat;
+
+    samePhaseDiscounts.push(bestLine);
+
+    var bestLineInPhase = _.reduce(samePhaseDiscounts, function(bestLine, line) {
+        if (!line) return bestLine;
+        return (line.import < bestLine.import) ? line : bestLine;
+    });
+
+    tree.childs.push(bestLineInPhase);
+
+    postponedDiscounts = _.sortBy(postponedDiscounts, 'phase');
 
     _.each(postponedDiscounts, function(l) {
         var modifier = new PriceDiscount(l);
