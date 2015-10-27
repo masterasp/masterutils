@@ -159,7 +159,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
         }
     }
 
-    var appliedRules = _.filter(self.lines.rules, ruleDoesApply);
+    var appliedRules = _.filter(self.line.rules, ruleDoesApply);
 
     // This hash contains the best discount for each line and day
     // discountPerDay['3|18475']= 15 Means that the line tree[3] will applys
