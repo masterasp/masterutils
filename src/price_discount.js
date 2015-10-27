@@ -201,11 +201,14 @@ PriceDiscount.prototype.modify = function(tree, options) {
 
         vat = (vat*base + lVat*l.baseImport*dsc/100) / (base + l.baseImport*dsc/100);
         base = base + l.baseImport * dsc/100;
+        totalImport = totalImport + l.import * dsc/100;
     });
 
     var bestLine = _.clone(self.line);
 
-    bestLine.import = -base;
+    bestLine.baseImport = -base;
+    bestLine.import = -totalImport;
+    bestLine.quantity = 1;
 
     bestLine.taxes = bestLine.taxes || [];
 
