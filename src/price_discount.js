@@ -165,7 +165,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
     // discountPerDay['3|18475']= 15 Means that the line tree[3] will applys
     // a 15% discount at day 18475
     var discountPerDay = {};
-    _.each(appliedRules, function(discountPerDay, rule) {
+    _.each(appliedRules, function(rule) {
         _.each(tree.childs, function(l, lineIdx) {
             _.each(daysInRule(l, rule), function(d) {
                 var k= lineIdx+'|'+d;
