@@ -25,6 +25,9 @@ exports.date2int = function(d) {
         if (typeof d === "number") {
             return d;
         }
+        if (typeof d === "string") {
+            d = new Date(d);
+        }
         return Math.floor(d.getTime() / 86400000);
 };
 
