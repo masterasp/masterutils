@@ -217,7 +217,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
         tax = {
             type: "VAT"
         };
-        bestLine.taxes.push = tax;
+        bestLine.taxes.push(tax);
     }
     tax.PC = vat;
 
