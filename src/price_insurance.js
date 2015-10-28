@@ -5,7 +5,7 @@ var _=require('lodash');
 
 var PriceInsurance = function(line) {
     this.line = line;
-    this.execOrder = line.execOrder || 7;
+    this.execOrder = line.execOrder || 8;
 };
 
 PriceInsurance.prototype.modify = function(tree) {

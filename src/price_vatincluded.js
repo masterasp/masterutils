@@ -5,7 +5,7 @@ var _=require('lodash');
 
 var PriceVatIncluded = function(line) {
     this.line = line;
-    this.execOrder = line.execOrder || 8;
+    this.execOrder = line.execOrder || 7;
 };
 
 PriceVatIncluded.prototype.modify = function(tree) {
