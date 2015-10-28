@@ -207,8 +207,10 @@ PriceDiscount.prototype.modify = function(tree, options) {
     var bestLine = _.clone(self.line);
 
     bestLine.baseImport = -base;
+    bestLine.basePrice = -base;
     bestLine.import = -totalImport;
     bestLine.quantity = 1;
+    bestLine.class = "LINE";
 
     bestLine.taxes = bestLine.taxes || [];
 

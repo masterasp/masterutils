@@ -6,7 +6,7 @@
     var masterUtils = {
         dateUtils: require('./date_utils.js'),
         round: require('./round.js'),
-        Price:  require('./price.js'),
+        Price:  null,
         Price2: require('./price2.js'),
         checks: {
             checkCreditCard: require('./creditcard.js').checkCreditCard

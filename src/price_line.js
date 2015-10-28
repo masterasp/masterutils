@@ -23,6 +23,7 @@ PriceLine.prototype.modify = function(tree) {
     }
 
     l.baseImport = l.import;
+    l.basePrice = l.price;
 
     tree.childs.push(l);
 };
