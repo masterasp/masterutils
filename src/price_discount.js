@@ -167,6 +167,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
     var discountPerDay = {};
     _.each(appliedRules, function(rule) {
         _.each(tree.childs, function(l, lineIdx) {
+            if (! _.contains(l.attributes, rule.applyIdConceptAtribute)) return;
             _.each(daysInRule(l, rule), function(d) {
                 var k= lineIdx+'|'+d;
                 if (!discountPerDay[k]) discountPerDay[k]=0;
