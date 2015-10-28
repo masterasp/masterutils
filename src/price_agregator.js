@@ -17,7 +17,7 @@ Agregate Modifier
 
 var PriceAgregator = function(line) {
     this.line = line;
-    this.execOrder = line.execOrder || 5;
+    this.execOrder = line.execOrder || 9;
     this.groupBy = line.groupBy;
 };
 

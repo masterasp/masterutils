@@ -5,15 +5,16 @@ var _=require('lodash');
 
 var PriceInsurance = function(line) {
     this.line = line;
-    this.execOrder = line.execOrder || 9;
+    this.execOrder = line.execOrder || 7;
 };
 
 PriceInsurance.prototype.modify = function(tree) {
     var self = this;
     var l = _.clone(this.line);
 
+
     var base = 0;
-    _.each(tree, function(l) {
+    _.each(tree.childs, function(l) {
         base += l.import;
     });
 
