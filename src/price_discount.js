@@ -63,7 +63,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
         var totalImport =0;
 
         _.each(tree.childs, function(l) {
-            if (! _.contains(l.attributes, rule.applyIdConceptAtribute)) return;
+            if (! _.contains(l.attributes, rule.applyIdConceptAttribute)) return;
             if (! l.baseImport) return;
 
             if (rule.applicationType === "WHOLE") {
@@ -167,7 +167,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
     var discountPerDay = {};
     _.each(appliedRules, function(rule) {
         _.each(tree.childs, function(l, lineIdx) {
-            if (! _.contains(l.attributes, rule.applyIdConceptAtribute)) return;
+            if (! _.contains(l.attributes, rule.applyIdConceptAttribute)) return;
             _.each(daysInRule(l, rule), function(d) {
                 var k= lineIdx+'|'+d;
                 if (!discountPerDay[k]) discountPerDay[k]=0;
