@@ -231,7 +231,9 @@ PriceDiscount.prototype.modify = function(tree, options) {
         return (line.import < bestLine.import) ? line : bestLine;
     });
 
-    tree.childs.push(bestLineInPhase);
+    if (bestLineInPhase.import !== 0) {
+        tree.childs.push(bestLineInPhase);
+    }
 
     postponedDiscounts = _.sortBy(postponedDiscounts, 'phase');
 

@@ -14,5 +14,5 @@ module.exports = function round(val, roundingType, rounding) {
     } else {
         throw new Error("Invalid roundingType: roundingType");
     }
-    return +(Math.round(v + "e+2")  + "e-2");
+    return +(Math.round(v + "e+8")  + "e-8");
 };
