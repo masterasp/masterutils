@@ -54,57 +54,6 @@ PriceDiscount.prototype.modify = function(tree, options) {
         if (b>a) return 0;
         return (b-a)/(iOut-iIn);
     }
-/*
-    function lineFromRule(rule) {
-        var newLine = _.clone(self.line);
-        var proportion;
-        var vat =0;
-        var base =0;
-        var totalImport =0;
-
-        _.each(tree.childs, function(l) {
-            if (! _.contains(l.attributes, rule.applyIdConceptAttribute)) return;
-            if (! l.baseImport) return;
-
-            if (rule.applicationType === "WHOLE") {
-                proportion = 1;
-            } else {
-                proportion = proportionApply(
-                    l.from ? du.date2int(l.from) : du.date2int(options.checkin),
-                    l.to ? du.date2int(l.to) : du.date2int(options.checkout),
-                    du.date2int(rule.applyFrom),
-                    du.date2int(rule.applyTo));
-            }
-
-            var lVat = 0;
-            _.each(l.taxes, function(tax) {
-                if (tax.type === "VAT") {
-                    lVat = tax.PC;
-                }
-            });
-
-            vat = (vat*base + lVat*l.baseImport * proportion) / (base + l.baseImport * proportion);
-            base = base + l.baseImport * proportion;
-            totalImport += l.import * proportion;
-        });
-
-        newLine.baseImport = base * ( 1- rule.applyDiscountPC/100);
-        newLine.import = base * ( 1- rule.applyDiscountPC/100);
-
-        newLine.taxes = newLine.taxes || [];
-
-        var tax = _.findWhere(newLine.taxes,{type: "VAT"});
-        if (!tax) {
-            tax = {
-                type: "VAT"
-            };
-            newLine.taxes.push = tax;
-        }
-        tax.PC = vat;
-
-        return newLine;
-    }
-*/
 
     function daysInRule(line, rule) {
         var a,b,i;
@@ -137,6 +86,8 @@ PriceDiscount.prototype.modify = function(tree, options) {
         }
         return days;
     }
+
+    // Remove the discounts with the same or greater phase.
 
     var samePhaseDiscounts = [];
     var postponedDiscounts = [];
@@ -179,6 +130,9 @@ PriceDiscount.prototype.modify = function(tree, options) {
     var vat =0;
     var base =0;
     var totalImport =0;
+
+    // toaleImport and base are the total amounts of discounts that are applied
+    // The VAT is a ponderated average of all the lines ther the discount applies.
 
     _.each(tree.childs, function(l, lineIdx) {
         var dsc=0;
@@ -224,6 +178,8 @@ PriceDiscount.prototype.modify = function(tree, options) {
     }
     tax.PC = vat;
 
+    // Find the best discount concept in the same phase.
+
     samePhaseDiscounts.push(bestLine);
 
     var bestLineInPhase = _.reduce(samePhaseDiscounts, function(bestLine, line) {
@@ -234,6 +190,8 @@ PriceDiscount.prototype.modify = function(tree, options) {
     if (bestLineInPhase.import !== 0) {
         tree.childs.push(bestLineInPhase);
     }
+
+    // Finaly we reaply the discounts of greater phases that wuere applied before.
 
     postponedDiscounts = _.sortBy(postponedDiscounts, 'phase');
 
