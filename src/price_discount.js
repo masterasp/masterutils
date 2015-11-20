@@ -58,8 +58,8 @@ PriceDiscount.prototype.modify = function(tree, options) {
     function daysInRule(line, rule) {
         var a,b,i;
         var days = [];
-        var lFrom = l.from ? du.date2int(l.from) : du.date2int(options.checkin);
-        var lTo = l.to ? du.date2int(l.to) : du.date2int(options.checkout);
+        var lFrom = line.from ? du.date2int(line.from) : du.date2int(options.checkin);
+        var lTo = line.to ? du.date2int(line.to) : du.date2int(options.checkout);
         if (rule.applicationType === "WHOLE") {
             a = lFrom;
             b = lTo;
@@ -79,8 +79,8 @@ PriceDiscount.prototype.modify = function(tree, options) {
     function daysInLine(line) {
         var i;
         var days = [];
-        var lFrom = l.from ? du.date2int(l.from) : du.date2int(options.checkin);
-        var lTo = l.to ? du.date2int(l.to) : du.date2int(options.checkout);
+        var lFrom = line.from ? du.date2int(line.from) : du.date2int(options.checkin);
+        var lTo = line.to ? du.date2int(line.to) : du.date2int(options.checkout);
         for (i=lFrom; i<lTo; i+=1) {
             days.push(i);
         }
