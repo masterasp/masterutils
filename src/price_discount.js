@@ -154,7 +154,9 @@ PriceDiscount.prototype.modify = function(tree, options) {
             }
         });
 
-        vat = (vat*base + lVat*l.baseImport*dsc/100) / (base + l.baseImport*dsc/100);
+        if (l.baseImport) {
+            vat = (vat*base + lVat*l.baseImport*dsc/100) / (base + l.baseImport*dsc/100);
+        }
         base = base + l.baseImport * dsc/100;
         totalImport = totalImport + l.import * dsc/100;
     });
