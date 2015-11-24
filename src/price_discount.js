@@ -65,7 +65,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
             b = lTo;
         } else if (rule.applicationType === "BYDAY") {
             var rFrom = du.date2int(rule.applyFrom);
-            var rTo = du.date2int(rule.applyTo);
+            var rTo = du.date2int(rule.applyTo) + 1;
 
             a = Math.max(rFrom, lFrom);
             b = Math.min(rTo, lTo);
