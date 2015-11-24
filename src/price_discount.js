@@ -43,7 +43,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
         if ((rule.checkoutMin)&&( iCheckout < du.date2int(rule.checkoutMin))) return false;
         if ((rule.checkoutMax)&&( iCheckout > du.date2int(rule.checkoutMax))) return false;
         if ((rule.minStay)&&( iCheckout - iCheckin < rule.minStay)) return false;
-        if ((rule.maxStay || rule.maxStay===0)&&( iCheckout - iCheckin < rule.maxStay)) return false;
+        if ((rule.maxStay || rule.maxStay===0)&&( iCheckout - iCheckin > rule.maxStay)) return false;
         return true;
     }
 
