@@ -168,7 +168,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
     bestLine.import = -totalImport;
     bestLine.quantity = 1;
     bestLine.class = "LINE";
-    bestLine.subOrder = self.execSuborder;
+    bestLine.suborder = self.execSuborder;
 
     bestLine.taxes = bestLine.taxes || [];
 
