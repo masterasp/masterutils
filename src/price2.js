@@ -78,7 +78,7 @@ Price2.prototype.constructTree = function() {
 
     function sortTree(node) {
         if (node.childs) {
-            node.childs = _.sortByAll(node.childs, ["order", "suborder"]);
+            node.childs = _.sortByAll(node.childs, ["execOrder", "execSuborder"]);
             _.each(node.childs, sortTree);
         }
     }
