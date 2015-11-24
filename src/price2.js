@@ -126,7 +126,7 @@ Price2.prototype.constructTree = function() {
         modifiers.push(modifier);
     });
 
-    modifiers = _.sortByAll(modifiers, ["execOrder", "execSubOrder", "suborder"]);
+    modifiers = _.sortByAll(modifiers, ["execOrder", "execSuborder", "suborder"]);
 
     _.each(modifiers, function(m) {
         m.modify(self.total, self.options);
