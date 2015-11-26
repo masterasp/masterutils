@@ -42,8 +42,29 @@ PriceDiscount.prototype.modify = function(tree, options) {
         if ((rule.checkinMax)&&( iCheckin > du.date2int(rule.checkinMax))) return false;
         if ((rule.checkoutMin)&&( iCheckout < du.date2int(rule.checkoutMin))) return false;
         if ((rule.checkoutMax)&&( iCheckout > du.date2int(rule.checkoutMax))) return false;
-        if ((rule.minStay)&&( iCheckout - iCheckin < rule.minStay)) return false;
-        if ((rule.maxStay || rule.maxStay===0)&&( iCheckout - iCheckin > rule.maxStay)) return false;
+
+
+        // We clculate an efective checkin/checkout taking in account the stayLengthFrom and stayLengthTo
+
+        var efCheckout, efCheckin;
+        if (rule.stayLengthFrom) {
+            efCheckin = Math.max(iCheckin, du.date2int(rule.stayLengthFrom));
+        } else {
+            efCheckin = iCheckin;
+        }
+        if (rule.stayLengthTo) {
+            efCheckout = Math.min(iCheckout, du.date2int(rule.stayLengthTo) +1);
+        } else {
+            efCheckout = iCheckout;
+        }
+        var efLen = efCheckout -efCheckin;
+        if (efLen>0) {
+            if ((rule.minStay)&&( efLen < rule.minStay)) return false;
+            if ((rule.maxStay || rule.maxStay===0)&&( efLen > rule.maxStay)) return false;
+        } else {
+            return false;
+        }
+
         return true;
     }
 
@@ -91,6 +112,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
 
     var samePhaseDiscounts = [];
     var postponedDiscounts = [];
+    var appliedDiscounts = [];
 
     var i,l;
     for (i=0; i<tree.childs.length; i+=1) {
@@ -108,6 +130,9 @@ PriceDiscount.prototype.modify = function(tree, options) {
                 i-=1;
             }
         }
+        if (l.discountPerDay) {
+                appliedDiscounts.push(l);
+        }
     }
 
     var appliedRules = _.filter(self.line.rules, ruleDoesApply);
@@ -117,12 +142,22 @@ PriceDiscount.prototype.modify = function(tree, options) {
     // a 15% discount at day 18475
     var discountPerDay = {};
     _.each(appliedRules, function(rule) {
-        _.each(tree.childs, function(l, lineIdx) {
+        _.each(tree.childs, function(l, lineIdx) { // TODO mirar tot l'arbre
+            if (l.class !== "LINE") return;
             if (! _.contains(l.attributes, rule.applyIdConceptAttribute.toString())) return;
             _.each(daysInRule(l, rule), function(d) {
                 var k= lineIdx+'|'+d;
+
+                var dsc = - rule.applyDiscountPC *  l.quantity *  l.basePrice / 100;
+                _.each(appliedDiscounts, function(od) {
+                    if (! _.contains(od.attributes, rule.applyIdConceptAttribute.toString())) return;
+                    if (od.discountPerDay[k]) {
+                        dsc = dsc -  od.discountPerDay[k] * rule.applyDiscountPC/100;
+                    }
+                });
+
                 if (!discountPerDay[k]) discountPerDay[k]=0;
-                discountPerDay[k] = Math.max(discountPerDay[k], rule.applyDiscountPC);
+                discountPerDay[k] = Math.min(discountPerDay[k], dsc);
             });
         });
     });
@@ -135,17 +170,14 @@ PriceDiscount.prototype.modify = function(tree, options) {
     // The VAT is a ponderated average of all the lines ther the discount applies.
 
     _.each(tree.childs, function(l, lineIdx) {
+        if (l.discountPerDay) return;
         var dsc=0;
-        var n =0;
         _.each(daysInLine(l), function(d) {
             var k= lineIdx+'|'+d;
             if (discountPerDay[k]) {
                 dsc += discountPerDay[k];
             }
-            n+=1;
         });
-        if (n === 0) return;
-        dsc = dsc / n;
 
         var lVat = 0;
         _.each(l.taxes, function(tax) {
@@ -154,21 +186,24 @@ PriceDiscount.prototype.modify = function(tree, options) {
             }
         });
 
-        if ((base + l.baseImport*dsc/100) > 0) {
-            vat = (vat*base + lVat*l.baseImport*dsc/100) / (base + l.baseImport*dsc/100);
+        if ((base + dsc) !== 0) {
+            vat = (vat*base + lVat*dsc) / (base + dsc);
         }
-        base = base + l.baseImport * dsc/100;
-        totalImport = totalImport + l.import * dsc/100;
+        base = base + dsc;
+        if (l.baseImport) {
+            totalImport = totalImport + l.import * dsc/l.baseImport;
+        }
     });
 
     var bestLine = _.clone(self.line);
 
-    bestLine.baseImport = -base;
-    bestLine.basePrice = -base;
-    bestLine.import = -totalImport;
+    bestLine.baseImport = base;
+    bestLine.basePrice = base;
+    bestLine.import = totalImport;
     bestLine.quantity = 1;
     bestLine.class = "LINE";
     bestLine.suborder = self.execSuborder;
+    bestLine.discountPerDay = discountPerDay;
 
     bestLine.taxes = bestLine.taxes || [];
 
