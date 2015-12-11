@@ -10,7 +10,8 @@
         Price2: require('./price2.js'),
         checks: {
             checkCreditCard: require('./creditcard.js').checkCreditCard
-        }
+        },
+        availabilityMatrix: require('./availability_matrix.js')
     };
 
     var root = typeof self === 'object' && self.self === self && self ||
