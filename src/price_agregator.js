@@ -19,6 +19,9 @@ var PriceAgregator = function(line) {
     this.line = line;
     this.execOrder = line.execOrder || 9;
     this.groupBy = line.groupBy;
+    if ( ! (this.groupBy instanceof  Array)) {
+        this.groupBy = [ this.groupBy ];
+    }
 };
 
 PriceAgregator.prototype.modify = function(tree) {
@@ -28,7 +31,7 @@ PriceAgregator.prototype.modify = function(tree) {
     var i,l;
     for (i=0; i<tree.childs.length; i+=1) {
         l=tree.childs[i];
-        if (_.contains(l.attributes, self.groupBy)) {
+        if (_.intersection(l.attributes, self.groupBy).length ===  self.groupBy.length) {
             newNode.childs.push(l);
             tree.childs[i] = tree.childs[tree.childs.length-1];
             tree.childs.pop();

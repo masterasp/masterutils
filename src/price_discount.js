@@ -117,7 +117,7 @@ PriceDiscount.prototype.modify = function(tree, options) {
     var i,l;
     for (i=0; i<tree.childs.length; i+=1) {
         l=tree.childs[i];
-        if (l.class === "DISCOUNT") {
+        if (l.discountPerDay) {
             if (l.phase === self.line.phase) { // Remove and get the best
                 samePhaseDiscounts.push(l);
                 tree.childs[i] = tree.childs[tree.childs.length-1];
@@ -128,10 +128,9 @@ PriceDiscount.prototype.modify = function(tree, options) {
                 tree.childs[i] = tree.childs[tree.childs.length-1];
                 tree.childs.pop();
                 i-=1;
-            }
-        }
-        if (l.discountPerDay) {
+            } else {
                 appliedDiscounts.push(l);
+            }
         }
     }
 
