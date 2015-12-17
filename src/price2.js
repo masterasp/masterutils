@@ -156,6 +156,8 @@ Price2.prototype.render = function() {
     hideTotal:          Just remove  the total and put all the childs
     totalOnBottom:         Put the Total on the dop
     hideDetail:         Do not show the details
+
+    hideIfNoChilds:     Hide if is a parent with no childs
 */
 
 
@@ -163,10 +165,14 @@ Price2.prototype.render = function() {
 
         var renderTotal = true;
         var renderDetail = true;
-        if ((!node.showIfZero) && (node.import === 0)) renderTotal = false;
+        if ((!node.showIfZero) && (!node.quantity) && (!node.import)) renderTotal = false;
         if ((node.childs)&&(node.childs.length === 1)&&(!node.hideDetail)) {
             if (node.ifOneHideParent) renderTotal = false;
             if (node.ifOneHideChild) renderDetail = false;
+        }
+        if (((!node.childs)||(node.childs.length === 0))&&(node.hideIfNoChilds))  {
+            renderTotal =false;
+            renderDetail = false;
         }
         if (node.hideDetail) renderDetail= false;
         if (node.hideTotal) renderTotal=false;
@@ -239,13 +245,18 @@ Price2.prototype.renderTree = function() {
 
         var renderTotal = true;
         var renderDetail = true;
-        if ((!node.showIfZero) && (node.import === 0)) renderTotal = false;
+        if ((!node.showIfZero) && (!node.quantity) && (!node.import)) renderTotal = false;
         if ((newNode.childs.length === 1)&&(!node.hideDetail)) {
             if (node.ifOneHideParent) renderTotal = false;
             if (node.ifOneHideChild) renderDetail = false;
         }
+        if ((newNode.childs.length === 0)&&(node.hideIfNoChilds)) {
+            renderTotal =false;
+            renderDetail = false;
+        }
         if (node.hideDetail) renderDetail= false;
         if (node.hideTotal) renderTotal=false;
+
 
         //            newNode.parent = parentNode;
 
