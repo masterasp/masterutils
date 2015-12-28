@@ -22,6 +22,7 @@ var registeredModifiers = {
     "LINE": require("./price_line.js"),
     "VATINCLUDED": require("./price_vatincluded.js"),
     "DISCOUNT": require("./price_discount.js"),
+    "CALCPRICE": require("./price_calcprice.js"),
     "INSURANCE": require("./price_insurance.js")
 };
 
@@ -48,8 +49,6 @@ var Price2 = function(p1, p2) {
     });
 
     self.treeValid=false;
-    self.renderValid=false;
-    self.renderTreeValid=false;
 };
 
 Price2.prototype.addPrice = function(p) {
@@ -67,10 +66,7 @@ Price2.prototype.addPrice = function(p) {
         self.lines.push(_.clone(l));
     });
     self.treeValid=false;
-    self.renderValid = false;
-    self.renderTreeValid = false;
 };
-
 
 Price2.prototype.constructTree = function() {
 
@@ -83,20 +79,9 @@ Price2.prototype.constructTree = function() {
         }
     }
 
-    function calcTotal(node) {
-        node.import = node.import || 0;
-        if (node.childs) {
-            _.each(node.childs, function(c) {
-                node.import += calcTotal(c);
-            });
-        }
-        return node.import;
-    }
 
-    function roundImports(node) {
-        node.import = round(node.import, "ROUND", 0.01);
-        _.each(node.childs, roundImports);
-    }
+
+
 
     if (self.treeValid) {
         return self.total;
@@ -134,16 +119,35 @@ Price2.prototype.constructTree = function() {
 
     sortTree(self.total);
 
-    calcTotal(self.total);
-    roundImports(self.total);
-
     self.treeValid = true;
     return self.total;
 };
 
-Price2.prototype.render = function() {
+function calcTotals(node, filter) {
+    if (!filter(node)) return 0;
+    if (typeof node.childs !== "undefined") {
+        node.import = 0;
+        _.each(node.childs, function(c) {
+            node.import += calcTotals(c, filter);
+        });
+    } else {
+        node.import = node.import || 0;
+    }
+    node.import = round(node.import, "ROUND", 0.01);
+    return node.import;
+}
+
+Price2.prototype.render = function(id, filter) {
+
+    if (typeof id === "function") {
+        filter =id;
+        id=null;
+    }
 
     var self = this;
+    id = id || "total";
+    var renderResult;
+    if (!filter) filter = function() {return true;};
 
 
 
@@ -165,6 +169,7 @@ Price2.prototype.render = function() {
 
         var renderTotal = true;
         var renderDetail = true;
+        if (!filter(node)) return 0;
         if ((!node.showIfZero) && (!node.quantity) && (!node.import)) renderTotal = false;
         if ((node.childs)&&(node.childs.length === 1)&&(!node.hideDetail)) {
             if (node.ifOneHideParent) renderTotal = false;
@@ -187,7 +192,7 @@ Price2.prototype.render = function() {
         newNode.level = level;
 
         if ((renderTotal) && (!node.totalOnBottom)) {
-            self.renderResult.push(newNode);
+            renderResult.push(newNode);
         }
 
         if (renderDetail) {
@@ -196,28 +201,35 @@ Price2.prototype.render = function() {
             });
         }
         if ((renderTotal) && (node.totalOnBottom)) {
-            self.renderResult.push(newNode);
+            renderResult.push(newNode);
         }
     }
 
-    if (self.renderValid) {
-        return self.renderResult;
-    }
-
-    self.renderResult = [];
+    renderResult = [];
 
     self.constructTree();
 
-    renderNode(self.total, 0);
+    var node = findNode(self.total, id);
 
-    self.renderValid = true;
-    return self.renderResult;
+    calcTotals(node, filter);
+
+    renderNode(node, 0);
+
+    return renderResult;
 };
 
 
-Price2.prototype.renderTree = function() {
+Price2.prototype.renderTree = function(id, filter) {
+
+    if (typeof id === "function") {
+        filter =id;
+        id=null;
+    }
 
     var self = this;
+    id = id || "total";
+    var renderTreeResult;
+    if (!filter) filter = function() {return true;};
 
 
 
@@ -235,6 +247,7 @@ Price2.prototype.renderTree = function() {
 
     function renderTreeNode(node, parentNode) {
 
+        if (!filter(node)) return 0;
 
         var newNode = _.clone(node);
         newNode.childs = [];
@@ -271,7 +284,7 @@ Price2.prototype.renderTree = function() {
             }
 
             if (parentNode === null) {
-                self.renderTreeResult = newNode;
+                renderTreeResult = newNode;
             }
         } else {
             if (!parentNode) {
@@ -294,20 +307,20 @@ Price2.prototype.renderTree = function() {
         });
     }
 
-    if (self.renderTreeValid) {
-        return self.renderTreeResult;
-    }
-
     self.constructTree();
 
-    self.renderTreeResult = null;
+    var node = findNode(self.total, id);
 
-    renderTreeNode(self.total, null);
+    calcTotals(node, filter);
 
-    setLevel(self.renderTreeResult, 0);
 
-    self.renderTreeValid = true;
-    return self.renderTreeResult;
+    renderTreeResult = null;
+
+    renderTreeNode(node, null);
+
+    setLevel(renderTreeResult, 0);
+
+    return renderTreeResult;
 };
 
 function findNode(node, id) {
