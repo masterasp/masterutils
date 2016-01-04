@@ -51,7 +51,7 @@ var Price2 = function(p1, p2) {
     self.treeValid=false;
 };
 
-Price2.prototype.addPrice = function(p) {
+Price2.prototype.addPrice = function(p, attr) {
     var self = this;
     if (!p) return;
     var cp;
@@ -63,12 +63,16 @@ Price2.prototype.addPrice = function(p) {
         cp = [p];
     }
     _.each(cp, function(l) {
-        self.lines.push(_.clone(l));
+        var newLine = _.clone(l);
+        if (attr) {
+            l.attributes.push(attr);
+        }
+        self.lines.push(newLine);
     });
     self.treeValid=false;
 };
 
-Price2.prototype.constructTree = function() {
+Price2.prototype.constructTree = function(parentOptions) {
 
     var self = this;
 
@@ -95,6 +99,10 @@ Price2.prototype.constructTree = function() {
         showIfZero: true,
         totalOnBottom: true
     };
+
+    if (parentOptions) {
+        _.extend(self.total, parentOptions);
+    }
 
     var modifiers = [];
 
@@ -124,7 +132,6 @@ Price2.prototype.constructTree = function() {
 };
 
 function calcTotals(node, filter) {
-    if (!filter(node)) return 0;
     if (typeof node.childs !== "undefined") {
         node.import = 0;
         _.each(node.childs, function(c) {
@@ -137,89 +144,8 @@ function calcTotals(node, filter) {
     return node.import;
 }
 
-Price2.prototype.render = function(id, filter) {
 
-    if (typeof id === "function") {
-        filter =id;
-        id=null;
-    }
-
-    var self = this;
-    id = id || "total";
-    var renderResult;
-    if (!filter) filter = function() {return true;};
-
-
-
-/*
-// VISUALIZATION FLAGS IN EACH NODE
-    showIfZero:         Show even if Total is zero
-    ifOneHideParent:    If this group has only one child, remove this group and
-                        replace it with the chald
-    ifOneHideChild:     If this group has only one child, remove the child
-    hideTotal:          Just remove  the total and put all the childs
-    totalOnBottom:         Put the Total on the dop
-    hideDetail:         Do not show the details
-
-    hideIfNoChilds:     Hide if is a parent with no childs
-*/
-
-
-    function renderNode(node, level) {
-
-        var renderTotal = true;
-        var renderDetail = true;
-        if (!filter(node)) return 0;
-        if ((!node.showIfZero) && (!node.quantity) && (!node.import)) renderTotal = false;
-        if ((node.childs)&&(node.childs.length === 1)&&(!node.hideDetail)) {
-            if (node.ifOneHideParent) renderTotal = false;
-            if (node.ifOneHideChild) renderDetail = false;
-        }
-        if (((!node.childs)||(node.childs.length === 0))&&(node.hideIfNoChilds))  {
-            renderTotal =false;
-            renderDetail = false;
-        }
-        if (node.hideDetail) renderDetail= false;
-        if (node.hideTotal) renderTotal=false;
-
-        var newNode = _.clone(node);
-        delete newNode.childs;
-        delete newNode.showIfZero;
-        delete newNode.hideDetail;
-        delete newNode.hideTotal;
-        delete newNode.ifOneHideParent;
-        delete newNode.ifOneHideChild;
-        newNode.level = level;
-
-        if ((renderTotal) && (!node.totalOnBottom)) {
-            renderResult.push(newNode);
-        }
-
-        if (renderDetail) {
-            _.each(node.childs, function(childNode) {
-                renderNode(childNode, renderTotal ? level +1 : level);
-            });
-        }
-        if ((renderTotal) && (node.totalOnBottom)) {
-            renderResult.push(newNode);
-        }
-    }
-
-    renderResult = [];
-
-    self.constructTree();
-
-    var node = findNode(self.total, id);
-
-    calcTotals(node, filter);
-
-    renderNode(node, 0);
-
-    return renderResult;
-};
-
-
-Price2.prototype.renderTree = function(id, filter) {
+Price2.prototype.renderTree = function(id, filter, parentOptions) {
 
     if (typeof id === "function") {
         filter =id;
@@ -249,32 +175,42 @@ Price2.prototype.renderTree = function(id, filter) {
 
         if (!filter(node)) return 0;
 
-        var newNode = _.clone(node);
-        newNode.childs = [];
+        var newNode = _.cloneDeep(node);
 
-        _.each(node.childs, function(childNode) {
-            renderTreeNode(childNode, newNode);
-        });
+
+        if (newNode.childs) {
+            newNode.childs = [];
+
+            newNode.import = 0;
+            _.each(node.childs, function(childNode) {
+                newNode.import += renderTreeNode(childNode, newNode);
+            });
+        }
+
+        if ((!newNode.units) &&(  round(newNode.price, "ROUND", 0.01)  === newNode.import)) {
+            delete newNode.price;
+        }
+
 
         var renderTotal = true;
         var renderDetail = true;
-        if ((!node.showIfZero) && (!node.quantity) && (!node.import)) renderTotal = false;
-        if ((newNode.childs.length === 1)&&(!node.hideDetail)) {
-            if (node.ifOneHideParent) renderTotal = false;
-            if (node.ifOneHideChild) renderDetail = false;
+        if ((!newNode.showIfZero) && (!newNode.quantity) && (!newNode.import)) renderTotal = false;
+        if ((newNode.childs)&&(newNode.childs.length === 1)&&(!newNode.hideDetail)) {
+            if (newNode.ifOneHideParent) renderTotal = false;
+            if (newNode.ifOneHideChild) renderDetail = false;
         }
-        if ((newNode.childs.length === 0)&&(node.hideIfNoChilds)) {
+        if ((newNode.childs)&&(newNode.childs.length === 0)&&(newNode.hideIfNoChilds)) {
             renderTotal =false;
             renderDetail = false;
         }
-        if (node.hideDetail) renderDetail= false;
-        if (node.hideTotal) renderTotal=false;
+        if (newNode.hideDetail) renderDetail= false;
+        if (newNode.hideTotal) renderTotal=false;
 
 
         //            newNode.parent = parentNode;
 
         if (!renderDetail) {
-            newNode.childs = [];
+            delete newNode.childs;
         }
 
 
@@ -298,6 +234,8 @@ Price2.prototype.renderTree = function(id, filter) {
             });
         }
 
+        return newNode.import || 0;
+
     }
 
     function setLevel(node, level) {
@@ -307,21 +245,63 @@ Price2.prototype.renderTree = function(id, filter) {
         });
     }
 
-    self.constructTree();
+    self.constructTree(parentOptions);
 
     var node = findNode(self.total, id);
 
-    calcTotals(node, filter);
 
 
     renderTreeResult = null;
 
     renderTreeNode(node, null);
 
+    calcTotals(renderTreeResult, filter);
+
     setLevel(renderTreeResult, 0);
 
     return renderTreeResult;
 };
+
+
+Price2.prototype.render = function(id, filter, parentOptions) {
+    var renderResult;
+    var self = this;
+
+
+    function renderNode(node, level) {
+
+        var newNode = _.clone(node);
+        delete newNode.childs;
+        delete newNode.showIfZero;
+        delete newNode.hideDetail;
+        delete newNode.hideTotal;
+        delete newNode.ifOneHideParent;
+        delete newNode.ifOneHideChild;
+        newNode.level = level;
+
+        if (!node.totalOnBottom) {
+            renderResult.push(newNode);
+        }
+
+        _.each(node.childs, function(childNode) {
+            renderNode(childNode, level +1);
+        });
+
+        if (node.totalOnBottom) {
+            renderResult.push(newNode);
+        }
+    }
+
+
+    var tree = self.renderTree(id, filter);
+
+    renderResult = [];
+
+    renderNode(tree, 0);
+
+    return renderResult;
+};
+
 
 function findNode(node, id) {
     var i;
@@ -335,15 +315,14 @@ function findNode(node, id) {
     return null;
 }
 
-Price2.prototype.getImport = function(id) {
+Price2.prototype.getImport = function(id, filter) {
     var self = this;
     id = id || "total";
-    self.constructTree();
 
-    var node = findNode(self.total, id);
+    var topNode= self.renderTree(id, filter);
 
-    if (node) {
-        return node.import;
+    if (topNode) {
+        return topNode.import;
     } else {
         return 0;
     }
@@ -377,6 +356,40 @@ Price2.prototype.toJSON = function() {
         if (typeof l.to === "number") l.to = du.int2date(l.to);
     });
     return obj;
+};
+
+Price2.attrFilter = function(attr) {
+    attr = attr.toString();
+    return function(n) {
+        if ((n.childs) ||
+            (_.contains(n.attributes, attr))) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+};
+
+
+Price2.prototype.eachLead = function(id, cb) {
+
+    if (typeof id === "function") {
+        cb = id;
+        id = "total";
+    }
+    var self = this;
+    self.constructTree();
+
+    var node = findNode(self.total, id);
+
+    function callEachNode(node) {
+        if (!node.childs) return cb(node);
+        _.each(node.childs, function (childNode) {
+            callEachNode(childNode);
+        });
+    }
+
+    callEachNode(node);
 };
 
 
