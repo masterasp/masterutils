@@ -87,9 +87,9 @@ Price2.prototype.constructTree = function(parentOptions) {
 
 
 
-    if (self.treeValid) {
-        return self.total;
-    }
+//    if (self.treeValid) {
+//        return self.total;
+//    }
 
     self.total = {
         id: "total",
@@ -293,7 +293,7 @@ Price2.prototype.render = function(id, filter, parentOptions) {
     }
 
 
-    var tree = self.renderTree(id, filter);
+    var tree = self.renderTree(id, filter, parentOptions);
 
     renderResult = [];
 
@@ -371,7 +371,7 @@ Price2.attrFilter = function(attr) {
 };
 
 
-Price2.prototype.eachLead = function(id, cb) {
+Price2.prototype.forEachLead = function(id, cb) {
 
     if (typeof id === "function") {
         cb = id;
