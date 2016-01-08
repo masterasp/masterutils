@@ -19,6 +19,24 @@ CalcPrice Modifier
 
 */
 
+function priceInterval(intervals, imp) {
+    var bestInterval = _.reduce(intervals, function(best, interval) {
+        if (!best) return interval;
+        if ((interval.fromImport > best.fromImport) && (interval.fromImport <= imp)) return interval;
+        return best;
+    });
+    if (!bestInterval) return imp;
+    if (bestInterval.pc) {
+        imp = import *bestInterval.pc/100;
+    } else {
+        imp = 0;
+    }
+    if (bestInterval.import) {
+        imp += bestInterval.import;
+    }
+    return imp;
+}
+
 var PriceCalcPrice = function(line) {
     this.execSuborder = line.phase;
     this.line = line;
@@ -68,13 +86,6 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         return true;
     }
 
-
-    function proportionApply(iIn, iOut, iApplyFrom, iApplyTo) {
-        var a = iIn > iApplyFrom ? iIn : iApplyFrom;
-        var b = iOut < iApplyTo ? iOut : iApplyTo;
-        if (b>a) return 0;
-        return (b-a)/(iOut-iIn);
-    }
 
     function daysInRule(line, rule) {
         var a,b,i;
@@ -199,7 +210,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
 
     bestLine.baseImport = base;
     bestLine.basePrice = base;
-    bestLine.import = totalImport;
+    bestLine.import = priceInterval(self.line.intervals,  totalImport);
     bestLine.quantity = 1;
     bestLine.class = "LINE";
     bestLine.suborder = self.execSuborder;

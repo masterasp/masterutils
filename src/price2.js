@@ -21,9 +21,7 @@ var registeredModifiers = {
     "AGREGATOR": require("./price_agregator.js"),
     "LINE": require("./price_line.js"),
     "VATINCLUDED": require("./price_vatincluded.js"),
-    "DISCOUNT": require("./price_discount.js"),
     "CALCPRICE": require("./price_calcprice.js"),
-    "INSURANCE": require("./price_insurance.js")
 };
 
 var Price2 = function(p1, p2) {
