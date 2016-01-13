@@ -27,7 +27,7 @@ function priceInterval(intervals, imp) {
     });
     if (!bestInterval) return imp;
     if (bestInterval.pc) {
-        imp = import *bestInterval.pc/100;
+        imp = imp *bestInterval.pc/100;
     } else {
         imp = 0;
     }
@@ -152,10 +152,15 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         _.each(tree.childs, function(l, lineIdx) { // TODO mirar tot l'arbre
             if (l.class !== "LINE") return;
             if (! _.contains(l.attributes, rule.applyIdConceptAttribute.toString())) return;
-            _.each(daysInRule(l, rule), function(d) {
+            var dr = daysInRule(l, rule);
+            _.each(dr, function(d) {
                 var k= lineIdx+'|'+d;
 
-                var prc = rule.applyPC *  l.quantity *  l.basePrice / 100;
+                var basePrice = rule.applyPC * l.basePrice / 100;
+                if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
+                if (typeof l.periods === "number") basePrice = basePrice * l.periods;
+
+                var prc = rule.applyPC *  basePrice / 100 / dr.length;
                 _.each(appliedCalcPrices, function(od) {
                     if (! _.contains(od.attributes, rule.applyIdConceptAttribute.toString())) return;
                     if (od.pricePerDay[k]) {
@@ -163,7 +168,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
                     }
                 });
 
-                if (!pricePerDay[k]) {
+                if (typeof pricePerDay[k] === "undefined") {
                     pricePerDay[k]=prc;
                 } else {
                     pricePerDay[k] = Math.min(pricePerDay[k], prc);
@@ -173,9 +178,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         });
     });
 
-    var vat =0;
     var base =0;
-    var totalImport =0;
 
     // totalImport and base are the total amounts of capcPrices that are applied
     // The VAT is a ponderated average of all the lines ther the calcPrice applies.
@@ -190,42 +193,22 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
             }
         });
 
-        var lVat = 0;
-        _.each(l.taxes, function(tax) {
-            if (tax.type === "VAT") {
-                lVat = tax.PC;
-            }
-        });
 
-        if ((base + prc) !== 0) {
-            vat = (vat*base + lVat*prc) / (base + prc);
-        }
         base = base + prc;
-        if (l.baseImport) {
-            totalImport = totalImport + l.import * prc/l.baseImport;
-        }
     });
 
     var bestLine = _.clone(self.line);
+    base  = priceInterval(self.line.intervals,  base);
 
     bestLine.baseImport = base;
     bestLine.basePrice = base;
-    bestLine.import = priceInterval(self.line.intervals,  totalImport);
+    bestLine.import = base;
     bestLine.quantity = 1;
     bestLine.class = "LINE";
     bestLine.suborder = self.execSuborder;
     bestLine.pricePerDay = pricePerDay;
 
     bestLine.taxes = bestLine.taxes || [];
-
-    var tax = _.findWhere(bestLine.taxes,{type: "VAT"});
-    if (!tax) {
-        tax = {
-            type: "VAT"
-        };
-        bestLine.taxes.push(tax);
-    }
-    tax.PC = vat;
 
     // Find the best calcPrice concept in the same phase.
 
