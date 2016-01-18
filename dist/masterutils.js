@@ -1179,11 +1179,13 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
             _.each(dr, function(d) {
                 var k= lineIdx+'|'+d;
 
-                var basePrice = rule.applyPC * l.basePrice / 100;
+                var basePrice = l.basePrice;
                 if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
-                if (typeof l.periods === "number") basePrice = basePrice * l.periods;
+                if (l.units.indexOf("N") < 0) {
+                    basePrice = basePrice / dr.length;
+                }
 
-                var prc = rule.applyPC *  basePrice / 100 / dr.length;
+                var prc = rule.applyPC *  basePrice / 100;
                 _.each(appliedCalcPrices, function(od) {
                     if (! _.contains(od.attributes, rule.applyIdConceptAttribute.toString())) return;
                     if (od.pricePerDay[k]) {
