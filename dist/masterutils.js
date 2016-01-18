@@ -1061,9 +1061,8 @@ function priceInterval(intervals, imp) {
 }
 
 var PriceCalcPrice = function(line) {
-    this.execSuborder = line.phase;
     this.line = line;
-    this.execOrder = line.execOrder || 5;
+    this.execOrder = line.phase;
 
 };
 
