@@ -1315,6 +1315,9 @@ PriceVatIncluded.prototype.modify = function(tree) {
             if (tax.type === "VAT") {
                 node.import = round(node.baseImport * (1 + tax.PC/100),"ROUND", 0.01);
                 node.price = node.basePrice * (1 + tax.PC/100);
+                _.each(node.pricePerDay, function(p, idx) {
+                    node.pricePerDay[idx] = node.pricePerDay[idx] * (1 + tax.PC/100);
+                });
             }
         });
         _.each(node.childs, applyVatNode);
