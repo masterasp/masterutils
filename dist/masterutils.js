@@ -1179,9 +1179,9 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
             _.each(dr, function(d) {
                 var k= lineIdx+'|'+d;
 
-                var basePrice = l.basePrice;
+                var basePrice = l.price;
                 if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
-                if (l.units.indexOf("N") < 0) {
+                if (typeof l.periods !== "number") {
                     basePrice = basePrice / dr.length;
                 }
 
