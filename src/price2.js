@@ -129,6 +129,7 @@ Price2.prototype.constructTree = function(parentOptions) {
     return self.total;
 };
 
+
 function calcTotals(node, filter) {
     if (typeof node.childs !== "undefined") {
         node.import = 0;
@@ -371,12 +372,14 @@ Price2.attrFilter = function(attr) {
 
 Price2.prototype.forEachLead = function(id, cb) {
 
+
     if (typeof id === "function") {
         cb = id;
         id = "total";
     }
     var self = this;
     self.constructTree();
+
 
     var node = findNode(self.total, id);
 
@@ -388,6 +391,48 @@ Price2.prototype.forEachLead = function(id, cb) {
     }
 
     callEachNode(node);
+};
+
+Price2.prototype.forEachLeadWithParent = function(id, cb) {
+
+    function setParents(node) {
+        node.parent = null;
+        _.each(node.childs, function(c) {
+            setParents(c);
+            c.parent = node;
+        });
+    }
+
+    function removeParents(node) {
+        delete node.parent;
+        _.each(node.childs, function(c) {
+            removeParents(c);
+            delete c.parent;
+        });
+    }
+
+    if (typeof id === "function") {
+        cb = id;
+        id = "total";
+    }
+    var self = this;
+    self.constructTree();
+
+
+    var node = findNode(self.total, id);
+
+    function callEachNode(node) {
+        if (!node.childs) return cb(node);
+        _.each(node.childs, function (childNode) {
+            callEachNode(childNode);
+        });
+    }
+
+    setParents(self.total);
+
+    callEachNode(node);
+
+    removeParents(self.total);
 };
 
 
