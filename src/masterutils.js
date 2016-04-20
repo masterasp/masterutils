@@ -11,7 +11,8 @@
         checks: {
             checkCreditCard: require('./creditcard.js').checkCreditCard
         },
-        availabilityMatrix: require('./availability_matrix.js')
+        availabilityMatrix: require('./availability_matrix.js'),
+        personArrayUtils: require('./person_array_utils.js')
     };
 
     var root = typeof self === 'object' && self.self === self && self ||

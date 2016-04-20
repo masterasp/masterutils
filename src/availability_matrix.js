@@ -4,7 +4,7 @@
 var _=require('lodash');
 var du = require('./date_utils');
 
-exports.trim = function(m) {
+exports.trim = function(m, intDate) {
 
     m.firstBookableDate = du.date2int(m.firstBookableDate);
     while ((m.matrix.length>1) && (m.matrix[0] === 0)) {
@@ -15,12 +15,15 @@ exports.trim = function(m) {
     while ((m.matrix.length>1) && (m.matrix[m.matrix.length-1] === 0)) {
         m.matrix.pop();
     }
-    m.firstBookableDate = du.int2date(m.firstBookableDate);
+
+    if (!intDate) {
+        m.firstBookableDate = du.int2date(m.firstBookableDate);
+    }
 
 };
 
 
-exports.AND = function(m1, m2) {
+exports.AND = function(m1, m2, intDate) {
     if (!m1) {
         return null;
     }
@@ -56,13 +59,15 @@ exports.AND = function(m1, m2) {
         out.matrix[i] = v;
     }
 
-    exports.trim(out);
-    out.firstBookableDate = du.int2date(out.firstBookableDate);
+    exports.trim(out, intDate);
+    if (!intDate) {
+        out.firstBookableDate = du.int2date(out.firstBookableDate);
+    }
 
     return out;
 };
 
-exports.OR = function(m1, m2) {
+exports.OR = function(m1, m2, intDate) {
     if ((!m1)&&(!m2)) return null;
     if (!m1) {
         return _.clone(m2);
@@ -95,15 +100,25 @@ exports.OR = function(m1, m2) {
         out.matrix[i] = v;
     }
 
-    exports.trim(out);
-    out.firstBookableDate = du.int2date(out.firstBookableDate);
+    exports.trim(out, intDate);
+    if (!intDate) {
+        out.firstBookableDate = du.int2date(out.firstBookableDate);
+    }
+
 
     return out;
 };
 
-exports.ZERO = function() {
-    return {
-        firstBookableDate: du.int2date(du.today()),
-        matrix: [0]
-    };
+exports.ZERO = function(intDate) {
+    if (intDate) {
+        return {
+            firstBookableDate: du.today(),
+            matrix: [0]
+        };
+    } else {
+        return {
+            firstBookableDate: du.int2date(du.today()),
+            matrix: [0]
+        };
+    }
 };

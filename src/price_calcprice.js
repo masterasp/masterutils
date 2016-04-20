@@ -156,6 +156,9 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
                 var k= lineIdx+'|'+d;
 
                 var basePrice = l.price;
+                if (typeof l.discount === "number") {
+                    basePrice = basePrice * (1 - l.discount/100);
+                }
                 if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
                 if (typeof l.periods !== "number") {
                     basePrice = basePrice / dr.length;
