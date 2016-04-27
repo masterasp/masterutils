@@ -6,7 +6,7 @@
 var _=(typeof window !== "undefined" ? window['_'] : typeof global !== "undefined" ? global['_'] : null);
 var du = require('./date_utils');
 
-exports.trim = function(m) {
+exports.trim = function(m, intDate) {
 
     m.firstBookableDate = du.date2int(m.firstBookableDate);
     while ((m.matrix.length>1) && (m.matrix[0] === 0)) {
@@ -17,12 +17,15 @@ exports.trim = function(m) {
     while ((m.matrix.length>1) && (m.matrix[m.matrix.length-1] === 0)) {
         m.matrix.pop();
     }
-    m.firstBookableDate = du.int2date(m.firstBookableDate);
+
+    if (!intDate) {
+        m.firstBookableDate = du.int2date(m.firstBookableDate);
+    }
 
 };
 
 
-exports.AND = function(m1, m2) {
+exports.AND = function(m1, m2, intDate) {
     if (!m1) {
         return null;
     }
@@ -58,13 +61,15 @@ exports.AND = function(m1, m2) {
         out.matrix[i] = v;
     }
 
-    exports.trim(out);
-    out.firstBookableDate = du.int2date(out.firstBookableDate);
+    exports.trim(out, intDate);
+    if (!intDate) {
+        out.firstBookableDate = du.int2date(out.firstBookableDate);
+    }
 
     return out;
 };
 
-exports.OR = function(m1, m2) {
+exports.OR = function(m1, m2, intDate) {
     if ((!m1)&&(!m2)) return null;
     if (!m1) {
         return _.clone(m2);
@@ -97,17 +102,27 @@ exports.OR = function(m1, m2) {
         out.matrix[i] = v;
     }
 
-    exports.trim(out);
-    out.firstBookableDate = du.int2date(out.firstBookableDate);
+    exports.trim(out, intDate);
+    if (!intDate) {
+        out.firstBookableDate = du.int2date(out.firstBookableDate);
+    }
+
 
     return out;
 };
 
-exports.ZERO = function() {
-    return {
-        firstBookableDate: du.int2date(du.today()),
-        matrix: [0]
-    };
+exports.ZERO = function(intDate) {
+    if (intDate) {
+        return {
+            firstBookableDate: du.today(),
+            matrix: [0]
+        };
+    } else {
+        return {
+            firstBookableDate: du.int2date(du.today()),
+            matrix: [0]
+        };
+    }
 };
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
@@ -525,7 +540,8 @@ onMinute();
         checks: {
             checkCreditCard: require('./creditcard.js').checkCreditCard
         },
-        availabilityMatrix: require('./availability_matrix.js')
+        availabilityMatrix: require('./availability_matrix.js'),
+        personArrayUtils: require('./person_array_utils.js')
     };
 
     var root = typeof self === 'object' && self.self === self && self ||
@@ -548,7 +564,224 @@ onMinute();
 }());
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./availability_matrix.js":1,"./creditcard.js":2,"./date_utils.js":3,"./price2.js":5,"./round.js":10}],5:[function(require,module,exports){
+},{"./availability_matrix.js":1,"./creditcard.js":2,"./date_utils.js":3,"./person_array_utils.js":5,"./price2.js":6,"./round.js":11}],5:[function(require,module,exports){
+(function (global){
+/*jslint node: true */
+"use strict";
+
+var _ = (typeof window !== "undefined" ? window['_'] : typeof global !== "undefined" ? global['_'] : null);
+
+exports.defaultAges = {
+    maxBabyAge: 2,
+    maxChildAge: 12,
+    minAdultAge: 18,
+    minRetiredAge: 65
+};
+
+exports.getPossibilities = function(possibleAges, fits) {
+    possibleAges.sort(function(a,b) {
+        return b[0] - a[0];
+    });
+
+    var possibilities = [];
+
+    function fill(possibility) {
+
+        var i;
+
+        // Calculate a set of ages of the lower bound of each limit
+        var ages = possibility.map(function(p) {
+            return p[0];
+        });
+        if (!fits(ages)) return;
+        possibilities.push(possibility);
+        var idx = _.findIndex(possibleAges,function(limits) {
+            return possibility[possibility.length-1][0] === limits[0];
+        });
+        for (i=idx; i<possibleAges.length; i+=1) {
+            var newPossibility = _.cloneDeep(possibility);
+            newPossibility.push(_.cloneDeep(possibleAges[i]));
+            fill(newPossibility);
+        }
+    }
+
+    var i;
+    for (i=0; (i<possibleAges.length)&&(possibleAges[i][1]>=18); i+=1) {
+        var newPossibility = [ _.cloneDeep(possibleAges[i]) ];
+        fill(newPossibility );
+    }
+
+    return possibilities;
+};
+
+exports.str2ages = function(S) {
+    var res = [];
+
+    var arr;
+    if (typeof S === "string") {
+        arr = S.split(',');
+    } else if (S instanceof Array) {
+        arr = S;
+    } else {
+        return res;
+    }
+
+    var i;
+    for (i = 0; i < arr.length; i += 1) {
+        switch (arr[i]) {
+            case 'A':
+            case '18+':
+                res.push(exports.defaultAges.minAdultAge);
+                break;
+            case 'R':
+            case '65+':
+                res.push(exports.defaultAges.minRetiredAge);
+                break;
+            case 'B':
+                res.push(0);
+                break;
+            case 'C':
+                res.push(exports.defaultAges.maxBabyAge+1);
+                break;
+            case 'T':
+                res.push(exports.defaultAges.minAdultAge -1);
+                break;
+            default:
+                var age = parseInt(arr[i]);
+                if (!isNaN(age))  {
+                    res.push(age);
+                }
+        }
+    }
+    return res;
+};
+
+
+exports.personsInRange = function(guestAges, minAge, maxAge) {
+    var n =0;
+    try {
+        var arr;
+        if (/^[ARTCB]+$/.exec(guestAges)) {
+            arr = guestAges.split('');
+        } else {
+            arr = guestAges.split(',');
+        }
+        var i;
+        for (i = 0; i < arr.length; i += 1) {
+            var age;
+            switch (arr[i]) {
+                case 'A':
+                case '18+':
+                    age = exports.defaultAges.minAdultAge;
+                    break;
+                case 'R':
+                case '65+':
+                    age = exports.defaultAges.minRetiredAge;
+                    break;
+                case 'B':
+                    age = 0;
+                    break;
+                case 'C':
+                    age = exports.defaultAges.maxChildAge;
+                    break;
+                case 'T':
+                    age = exports.defaultAges.maxChildAge +1;
+                    break;
+                default:
+                    age = parseInt(arr[i]);
+                    if (isNaN(age)) return 0;
+            }
+            if ((age>=minAge) && (age<=maxAge)) n +=1;
+        }
+    } catch(err) {
+        return 0;
+    }
+    return n;
+};
+
+exports.fits = function(guestAges, maxAdults, maxChilds, maxBabies, maxChildAge, maxBabyAge) {
+    var self = this;
+    var a = maxAdults || 0;
+    var b = maxBabies || 0;
+    var c = maxChilds || 0;
+
+    guestAges.sort(function(a,b) {
+        return a-b;
+    });
+
+    var i;
+    for (i =0; i< guestAges.length; i+=1) {
+        if (guestAges[i] <= maxBabyAge) {
+            if (b>0) {
+                b -= 1;
+            } else {
+                return false;
+            }
+        } else if (guestAges[i] <= maxChildAge) {
+            if (c>0) {
+                c -= 1;
+            } else if (a>0) {
+                a -= 1;
+            } else {
+                return false;
+            }
+        } else {
+            if (a>0) {
+                a -= 1;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    return true;
+};
+
+exports.personSets2index = function(personArraySet) {
+    var result = {
+        age2personType: new Array(100),
+        association2index: {}
+    };
+
+    var range2letter = {};
+    var letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    var nextLetter = 0;
+
+    _.each(personArraySet, function(set, setIndex) {
+        _.each(set, function(possibility) {
+            var possibilityStr = "";
+            _.each(possibility, function(range) {
+                var k= range[0]+'-'+range[1];
+                if (!range2letter[k]) {
+                    range2letter[k] = letters[nextLetter];
+                    nextLetter +=1;
+                    var i;
+                    for (i=range[0] ; i<= range[1]; i++) {
+                        result.age2personType[i] = range2letter[k];
+                    }
+                }
+                possibilityStr += range2letter[k];
+            });
+            result.association2index[possibilityStr] = setIndex;
+        });
+    });
+
+    result.age2personType = result.age2personType.join("");
+
+    var k = result.age2personType.length;
+    while ((k>1) && (result.age2personType[k-1] === result.age2personType[k-2])) k -= 1;
+
+    result.age2personType = result.age2personType.substring(0, k);
+
+    return result;
+};
+
+
+
+
+
+}).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],6:[function(require,module,exports){
 (function (global){
 /*jslint node: true */
 "use strict";
@@ -680,6 +913,7 @@ Price2.prototype.constructTree = function(parentOptions) {
     self.treeValid = true;
     return self.total;
 };
+
 
 function calcTotals(node, filter) {
     if (typeof node.childs !== "undefined") {
@@ -923,12 +1157,14 @@ Price2.attrFilter = function(attr) {
 
 Price2.prototype.forEachLead = function(id, cb) {
 
+
     if (typeof id === "function") {
         cb = id;
         id = "total";
     }
     var self = this;
     self.constructTree();
+
 
     var node = findNode(self.total, id);
 
@@ -942,6 +1178,48 @@ Price2.prototype.forEachLead = function(id, cb) {
     callEachNode(node);
 };
 
+Price2.prototype.forEachLeadWithParent = function(id, cb) {
+
+    function setParents(node) {
+        node.parent = null;
+        _.each(node.childs, function(c) {
+            setParents(c);
+            c.parent = node;
+        });
+    }
+
+    function removeParents(node) {
+        delete node.parent;
+        _.each(node.childs, function(c) {
+            removeParents(c);
+            delete c.parent;
+        });
+    }
+
+    if (typeof id === "function") {
+        cb = id;
+        id = "total";
+    }
+    var self = this;
+    self.constructTree();
+
+
+    var node = findNode(self.total, id);
+
+    function callEachNode(node) {
+        if (!node.childs) return cb(node);
+        _.each(node.childs, function (childNode) {
+            callEachNode(childNode);
+        });
+    }
+
+    setParents(self.total);
+
+    callEachNode(node);
+
+    removeParents(self.total);
+};
+
 
 
 
@@ -950,7 +1228,7 @@ module.exports = Price2;
 
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./date_utils":3,"./price_agregator.js":6,"./price_calcprice.js":7,"./price_line.js":8,"./price_vatincluded.js":9,"./round":10}],6:[function(require,module,exports){
+},{"./date_utils":3,"./price_agregator.js":7,"./price_calcprice.js":8,"./price_line.js":9,"./price_vatincluded.js":10,"./round":11}],7:[function(require,module,exports){
 (function (global){
 /*jslint node: true */
 "use strict";
@@ -1019,7 +1297,7 @@ module.exports = PriceAgregator;
 
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 (function (global){
 /*jslint node: true */
 "use strict";
@@ -1179,6 +1457,9 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
                 var k= lineIdx+'|'+d;
 
                 var basePrice = l.price;
+                if (typeof l.discount === "number") {
+                    basePrice = basePrice * (1 - l.discount/100);
+                }
                 if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
                 if (typeof l.periods !== "number") {
                     basePrice = basePrice / dr.length;
@@ -1260,7 +1541,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
 module.exports = PriceCalcPrice;
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./date_utils.js":3}],8:[function(require,module,exports){
+},{"./date_utils.js":3}],9:[function(require,module,exports){
 (function (global){
 /*jslint node: true */
 "use strict";
@@ -1295,7 +1576,7 @@ PriceLine.prototype.modify = function(tree) {
 module.exports = PriceLine;
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 (function (global){
 /*jslint node: true */
 "use strict";
@@ -1329,7 +1610,7 @@ PriceVatIncluded.prototype.modify = function(tree) {
 module.exports = PriceVatIncluded;
 
 }).call(this,typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./round":10}],10:[function(require,module,exports){
+},{"./round":11}],11:[function(require,module,exports){
 /*jslint node: true */
 "use strict";
 
