@@ -137,19 +137,21 @@ exports.fits = function(guestAges, maxAdults, maxChilds, maxBabies, maxChildAge,
     var b = maxBabies || 0;
     var c = maxChilds || 0;
 
-    guestAges.sort(function(a,b) {
+    var tmpGuestAges = _.clone(guestAges);
+
+    tmpGuestAges.sort(function(a,b) {
         return a-b;
     });
 
     var i;
-    for (i =0; i< guestAges.length; i+=1) {
-        if (guestAges[i] <= maxBabyAge) {
+    for (i =0; i< tmpGuestAges.length; i+=1) {
+        if (tmpGuestAges[i] <= maxBabyAge) {
             if (b>0) {
                 b -= 1;
             } else {
                 return false;
             }
-        } else if (guestAges[i] <= maxChildAge) {
+        } else if (tmpGuestAges[i] <= maxChildAge) {
             if (c>0) {
                 c -= 1;
             } else if (a>0) {
