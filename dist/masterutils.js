@@ -705,19 +705,21 @@ exports.fits = function(guestAges, maxAdults, maxChilds, maxBabies, maxChildAge,
     var b = maxBabies || 0;
     var c = maxChilds || 0;
 
-    guestAges.sort(function(a,b) {
+    var tmpGuestAges = _.clone(guestAges);
+
+    tmpGuestAges.sort(function(a,b) {
         return a-b;
     });
 
     var i;
-    for (i =0; i< guestAges.length; i+=1) {
-        if (guestAges[i] <= maxBabyAge) {
+    for (i =0; i< tmpGuestAges.length; i+=1) {
+        if (tmpGuestAges[i] <= maxBabyAge) {
             if (b>0) {
                 b -= 1;
             } else {
                 return false;
             }
-        } else if (guestAges[i] <= maxChildAge) {
+        } else if (tmpGuestAges[i] <= maxChildAge) {
             if (c>0) {
                 c -= 1;
             } else if (a>0) {
@@ -1448,39 +1450,51 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     // pricePerDay['3|18475']= 15 Means that the line tree[3] will have a price of 15
     // at day 18475
     var pricePerDay = {};
+    var pricePerDayFixed = {};
     _.each(appliedRules, function(rule) {
-        _.each(tree.childs, function(l, lineIdx) { // TODO mirar tot l'arbre
-            if (l.class !== "LINE") return;
-            if (! _.contains(l.attributes, rule.applyIdConceptAttribute.toString())) return;
-            var dr = daysInRule(l, rule);
-            _.each(dr, function(d) {
-                var k= lineIdx+'|'+d;
+        if (rule.applyPC) {
+            _.each(tree.childs, function(l, lineIdx) { // TODO mirar tot l'arbre
+                if (l.class !== "LINE") return;
+                if (! _.contains(l.attributes, rule.applyIdConceptAttribute.toString())) return;
+                var dr = daysInRule(l, rule);
+                _.each(dr, function(d) {
+                    var k= lineIdx+'|'+d;
 
-                var basePrice = l.price;
-                if (typeof l.discount === "number") {
-                    basePrice = basePrice * (1 - l.discount/100);
-                }
-                if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
-                if (typeof l.periods !== "number") {
-                    basePrice = basePrice / dr.length;
-                }
+                    var basePrice = l.price;
+                    if (typeof l.discount === "number") {
+                        basePrice = basePrice * (1 - l.discount/100);
+                    }
+                    if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
+                    if (typeof l.periods !== "number") {
+                        basePrice = basePrice / dr.length;
+                    }
 
-                var prc = rule.applyPC *  basePrice / 100;
-                _.each(appliedCalcPrices, function(od) {
-                    if (! _.contains(od.attributes, rule.applyIdConceptAttribute.toString())) return;
-                    if (od.pricePerDay[k]) {
-                        prc = prc +  od.pricePerDay[k] * rule.applyPC/100;
+                    var prc = rule.applyPC *  basePrice / 100;
+                    _.each(appliedCalcPrices, function(od) {
+                        if (! _.contains(od.attributes, rule.applyIdConceptAttribute.toString())) return;
+                        if (od.pricePerDay[k]) {
+                            prc = prc +  od.pricePerDay[k] * rule.applyPC/100;
+                        }
+                    });
+
+                    if (typeof pricePerDay[k] === "undefined") {
+                        pricePerDay[k]=prc;
+                    } else {
+                        pricePerDay[k] = Math.min(pricePerDay[k], prc);
                     }
                 });
-
-                if (typeof pricePerDay[k] === "undefined") {
-                    pricePerDay[k]=prc;
-                } else {
-                    pricePerDay[k] = Math.min(pricePerDay[k], prc);
-                }
-
             });
-        });
+        }
+        if (rule.applyPrice) {
+            var dr = daysInRule(self.line, rule);
+            _.each(dr, function(d) {
+                if (typeof pricePerDayFixed[d] === "undefined") {
+                    pricePerDayFixed[d]=rule.applyPrice;
+                } else {
+                    pricePerDayFixed[d] = Math.min(rule.applyPrice, pricePerDayFixed[d]);
+                }
+            });
+        }
     });
 
     var base =0;
@@ -1498,6 +1512,11 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
             }
         });
 
+        base = base + prc;
+    });
+
+    _.each(daysInLine(self.line), function(d) {
+        var prc = pricePerDayFixed[d] || 0;
 
         base = base + prc;
     });

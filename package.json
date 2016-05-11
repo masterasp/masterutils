@@ -1,6 +1,6 @@
 {
   "name": "masterutils",
-  "version": "1.1.10",
+  "version": "1.1.11",
   "description": "masterASP basic javascript utilities",
   "main": "src/masterutils.js",
   "scripts": {
