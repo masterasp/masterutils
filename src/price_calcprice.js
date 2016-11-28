@@ -224,10 +224,11 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     bestLine.baseImport = base;
     bestLine.basePrice = base;
     bestLine.import = base;
+    if(!bestLine.price) bestLine.price = base;
     bestLine.quantity = 1;
     bestLine.class = "LINE";
     bestLine.suborder = self.execSuborder;
-    bestLine.pricePerDay = pricePerDay;
+    bestLine.pricePerDay = Object.keys(pricePerDay).length > 0 ? pricePerDay : null;
 
     bestLine.taxes = bestLine.taxes || [];
 
