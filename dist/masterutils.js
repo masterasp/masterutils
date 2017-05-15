@@ -1412,6 +1412,10 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         var days = [];
         var lFrom = line.from ? du.date2int(line.from) : du.date2int(options.checkin);
         var lTo = line.to ? du.date2int(line.to) : du.date2int(options.checkout);
+        if (_.contains(line.attributes,"DOWNPAYMENT")) {
+            lFrom = du.date2int(options.checkin);
+            lTo = du.date2int(options.checkout);
+        }
         for (i=lFrom; i<lTo; i+=1) {
             days.push(i);
         }
