@@ -1394,7 +1394,10 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         var days = [];
         var lFrom = line.from ? du.date2int(line.from) : du.date2int(options.checkin);
         var lTo = line.to ? du.date2int(line.to) : du.date2int(options.checkout);
-
+        if (_.contains(line.attributes,"DOWNPAYMENT")) {
+            lFrom = du.date2int(options.checkin);
+            lTo = du.date2int(options.checkout);
+        }
         var rFrom = rule.applyFrom ? du.date2int(rule.applyFrom): lFrom;
         var rTo = rule.applyTo ? du.date2int(rule.applyTo) + 1 : lTo;
 
@@ -1583,7 +1586,7 @@ PriceLine.prototype.modify = function(tree) {
     var price = l.price;
 
     l.import = l.price * l.quantity;
-    if (!isNaN(l.periods)) {
+    if (l.periods !== null && !isNaN(l.periods)) {
         l.import = l.import * l.periods;
     }
 
