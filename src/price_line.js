@@ -14,7 +14,7 @@ PriceLine.prototype.modify = function(tree) {
     var price = l.price;
 
     l.import = l.price * l.quantity;
-    if (!isNaN(l.periods)) {
+    if (l.periods !== null && !isNaN(l.periods)) {
         l.import = l.import * l.periods;
     }
 
