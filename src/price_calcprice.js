@@ -155,6 +155,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     // at day 18475
     var pricePerDay = {};
     var pricePerDayFixed = {};
+    var discountNights = 0;
     _.each(appliedRules, function(rule) {
         if (rule.applyPC) {
             _.each(tree.childs, function(l, lineIdx) { // TODO mirar tot l'arbre
@@ -199,6 +200,12 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
                 }
             });
         }
+        if (rule.applyND) {
+            var dr = daysInRule(self.line, rule);
+            _.each(dr, function(d) {
+                discountNights = Math.max(discountNights, rule.applyND);
+            });
+        }
     });
 
     var base =0;
@@ -224,6 +231,29 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
 
         base = base + prc;
     });
+
+    var iCheckin = du.date2int(options.checkin);
+    var iCheckout = du.date2int(options.checkout);
+    var basePricePerDay = new Array(iCheckout - iCheckin).fill(0);
+    _.each(tree.childs, function(l, lineIdx) {
+        var dr = daysInLine(l);
+        _.each(dr, function(d) {
+            var basePrice = l.price;
+            if (typeof l.discount === "number") {
+                basePrice = basePrice * (1 - l.discount/100);
+            }
+            if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
+            if (typeof l.periods !== "number") {
+                basePrice = basePrice / dr.length;
+            }
+
+            basePricePerDay[d - iCheckin] += basePrice;
+        });
+    });
+    basePricePerDay.sort(function(a,b) { return a-b});
+    for (var i=0; i<discountNights; i++) {
+        base -= basePricePerDay[i];
+    }
 
     var bestLine = _.clone(self.line);
     base  = priceInterval(self.line.intervals,  base);
