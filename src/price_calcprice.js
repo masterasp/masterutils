@@ -156,6 +156,8 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     var pricePerDay = {};
     var pricePerDayFixed = {};
     var discountNights = 0;
+    var mainConceptAttribute = '';
+
     _.each(appliedRules, function(rule) {
         if (rule.applyPC) {
             _.each(tree.childs, function(l, lineIdx) { // TODO mirar tot l'arbre
@@ -201,6 +203,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
             });
         }
         if (rule.applyND) {
+            mainConceptAttribute = rule.applyIdConceptAttribute.toString();
             var dr = daysInRule(self.line, rule);
             _.each(dr, function(d) {
                 discountNights = Math.max(discountNights, rule.applyND);
@@ -236,6 +239,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     var iCheckout = du.date2int(options.checkout);
     var basePricePerDay = new Array(iCheckout - iCheckin).fill(0);
     _.each(tree.childs, function(l, lineIdx) {
+        if (!_.contains(l.attributes, mainConceptAttribute.toString())) return;
         var dr = daysInLine(l);
         _.each(dr, function(d) {
             var basePrice = l.price;
