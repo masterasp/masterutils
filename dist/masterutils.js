@@ -1557,7 +1557,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
             basePricePerDay[d - iCheckin] += basePrice;
         });
     });
-    basePricePerDay.sort(function(a,b) { return a-b});
+    basePricePerDay.sort(function(a,b) { return b-a});
     for (var i=0; i<discountNights; i++) {
         base -= basePricePerDay[i];
     }
