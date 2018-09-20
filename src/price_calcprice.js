@@ -131,7 +131,8 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     var i,l;
     for (i=0; i<tree.childs.length; i+=1) {
         l=tree.childs[i];
-        if (l.pricePerDay) {
+        var existsND = (_.find(l.rules, function(r) {return r.applyND > 0}) !== undefined);
+        if (l.pricePerDay || existsND) {
             if (l.phase === self.line.phase) { // Remove and get the best
                 samePhaseCalcPrices.push(l);
                 tree.childs[i] = tree.childs[tree.childs.length-1];
@@ -178,6 +179,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
 
                     var prc = rule.applyPC *  basePrice / 100;
                     _.each(appliedCalcPrices, function(od) {
+                        if (od.pricePerDay === undefined || od.pricePerDay === null) return;
                         if (! _.contains(od.attributes, rule.applyIdConceptAttribute.toString())) return;
                         if (od.pricePerDay[k]) {
                             prc = prc +  od.pricePerDay[k] * rule.applyPC/100;
