@@ -1,8 +1,8 @@
 /*jslint node: true */
 "use strict";
 
-var _=require('lodash');
-var du= require("./date_utils.js");
+var _ = require('lodash');
+var du = require("./date_utils.js");
 
 /*
 
@@ -20,14 +20,14 @@ CalcPrice Modifier
 */
 
 function priceInterval(intervals, imp) {
-    var bestInterval = _.reduce(intervals, function(best, interval) {
+    var bestInterval = _.reduce(intervals, function (best, interval) {
         if (!best) return interval;
         if ((interval.fromImport > best.fromImport) && (interval.fromImport <= imp)) return interval;
         return best;
     });
     if (!bestInterval) return imp;
     if (bestInterval.pc) {
-        imp = imp *bestInterval.pc/100;
+        imp = imp * bestInterval.pc / 100;
     } else {
         imp = 0;
     }
@@ -37,28 +37,28 @@ function priceInterval(intervals, imp) {
     return imp;
 }
 
-var PriceCalcPrice = function(line) {
+var PriceCalcPrice = function (line) {
     this.line = line;
     this.execOrder = line.phase;
 
 };
 
-PriceCalcPrice.prototype.modify = function(tree, options) {
+PriceCalcPrice.prototype.modify = function (tree, options) {
 
     var self = this;
 
-    function ruleDoesApply (rule) {
+    function ruleDoesApply(rule) {
         var iReservation = du.date2int(options.reservation);
-        if ((rule.reservationMin)&&(iReservation < du.date2int(rule.reservationMin))) return false;
-        if ((rule.reservationMax)&&(iReservation > du.date2int(rule.reservationMax))) return false;
+        if ((rule.reservationMin) && (iReservation < du.date2int(rule.reservationMin))) return false;
+        if ((rule.reservationMax) && (iReservation > du.date2int(rule.reservationMax))) return false;
         var iCheckin = du.date2int(options.checkin);
         var iCheckout = du.date2int(options.checkout);
-        if ((rule.daysBeforeCheckinMin)&&( iCheckin - iReservation < rule.daysBeforeCheckinMin )) return false;
-        if ((rule.daysBeforeCheckinMin || rule.daysBeforeCheckinMin===0)&&( iCheckin - iReservation > rule.daysBeforeCheckinMax )) return false;
-        if ((rule.checkinMin)&&( iCheckin < du.date2int(rule.checkinMin))) return false;
-        if ((rule.checkinMax)&&( iCheckin > du.date2int(rule.checkinMax))) return false;
-        if ((rule.checkoutMin)&&( iCheckout < du.date2int(rule.checkoutMin))) return false;
-        if ((rule.checkoutMax)&&( iCheckout > du.date2int(rule.checkoutMax))) return false;
+        if ((rule.daysBeforeCheckinMin) && (iCheckin - iReservation < rule.daysBeforeCheckinMin)) return false;
+        if ((rule.daysBeforeCheckinMin || rule.daysBeforeCheckinMin === 0) && (iCheckin - iReservation > rule.daysBeforeCheckinMax)) return false;
+        if ((rule.checkinMin) && (iCheckin < du.date2int(rule.checkinMin))) return false;
+        if ((rule.checkinMax) && (iCheckin > du.date2int(rule.checkinMax))) return false;
+        if ((rule.checkoutMin) && (iCheckout < du.date2int(rule.checkoutMin))) return false;
+        if ((rule.checkoutMax) && (iCheckout > du.date2int(rule.checkoutMax))) return false;
 
 
         // We clculate an efective checkin/checkout taking in account the stayLengthFrom and stayLengthTo
@@ -70,14 +70,14 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
             efCheckin = iCheckin;
         }
         if (rule.stayLengthTo) {
-            efCheckout = Math.min(iCheckout, du.date2int(rule.stayLengthTo) +1);
+            efCheckout = Math.min(iCheckout, du.date2int(rule.stayLengthTo) + 1);
         } else {
             efCheckout = iCheckout;
         }
-        var efLen = efCheckout -efCheckin;
-        if (efLen>0) {
-            if ((rule.minStay)&&( efLen < rule.minStay)) return false;
-            if ((rule.maxStay || rule.maxStay===0)&&( efLen > rule.maxStay)) return false;
+        var efLen = efCheckout - efCheckin;
+        if (efLen > 0) {
+            if ((rule.minStay) && (efLen < rule.minStay)) return false;
+            if ((rule.maxStay || rule.maxStay === 0) && (efLen > rule.maxStay)) return false;
         } else {
             return false;
         }
@@ -87,21 +87,21 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
 
 
     function daysInRule(line, rule) {
-        var a,b,i;
+        var a, b, i;
         var days = [];
         var lFrom = line.from ? du.date2int(line.from) : du.date2int(options.checkin);
         var lTo = line.to ? du.date2int(line.to) : du.date2int(options.checkout);
-        if (_.contains(line.attributes,"DOWNPAYMENT")) {
+        if (_.contains(line.attributes, "DOWNPAYMENT")) {
             lFrom = du.date2int(options.checkin);
             lTo = du.date2int(options.checkout);
         }
-        var rFrom = rule.applyFrom ? du.date2int(rule.applyFrom): lFrom;
+        var rFrom = rule.applyFrom ? du.date2int(rule.applyFrom) : lFrom;
         var rTo = rule.applyTo ? du.date2int(rule.applyTo) + 1 : lTo;
 
         a = Math.max(rFrom, lFrom);
         b = Math.min(rTo, lTo);
 
-        for (i=a; i<b; i+=1) {
+        for (i = a; i < b; i += 1) {
             days.push(i);
         }
         return days;
@@ -112,11 +112,11 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         var days = [];
         var lFrom = line.from ? du.date2int(line.from) : du.date2int(options.checkin);
         var lTo = line.to ? du.date2int(line.to) : du.date2int(options.checkout);
-        if (_.contains(line.attributes,"DOWNPAYMENT")) {
+        if (_.contains(line.attributes, "DOWNPAYMENT")) {
             lFrom = du.date2int(options.checkin);
             lTo = du.date2int(options.checkout);
         }
-        for (i=lFrom; i<lTo; i+=1) {
+        for (i = lFrom; i < lTo; i += 1) {
             days.push(i);
         }
         return days;
@@ -128,21 +128,23 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     var postponedCalcPrices = [];
     var appliedCalcPrices = [];
 
-    var i,l;
-    for (i=0; i<tree.childs.length; i+=1) {
-        l=tree.childs[i];
-        var existsND = (_.find(l.rules, function(r) {return r.applyND > 0}) !== undefined);
+    var i, l;
+    for (i = 0; i < tree.childs.length; i += 1) {
+        l = tree.childs[i];
+        var existsND = (_.find(l.rules, function (r) {
+            return r.applyND > 0
+        }) !== undefined);
         if (l.pricePerDay || existsND) {
             if (l.phase === self.line.phase) { // Remove and get the best
                 samePhaseCalcPrices.push(l);
-                tree.childs[i] = tree.childs[tree.childs.length-1];
+                tree.childs[i] = tree.childs[tree.childs.length - 1];
                 tree.childs.pop();
-                i-=1;
+                i -= 1;
             } else if (l.phase > self.line.phase) { // Remove and reprcess  later
                 postponedCalcPrices.push(l);
-                tree.childs[i] = tree.childs[tree.childs.length-1];
+                tree.childs[i] = tree.childs[tree.childs.length - 1];
                 tree.childs.pop();
-                i-=1;
+                i -= 1;
             } else {
                 appliedCalcPrices.push(l);
             }
@@ -157,37 +159,38 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     var pricePerDay = {};
     var pricePerDayFixed = {};
     var discountNights = 0;
+    let daysOnDiscountNightsApplies = {};
     var mainConceptAttribute = '';
 
-    _.each(appliedRules, function(rule) {
+    _.each(appliedRules, function (rule) {
         if (rule.applyPC) {
-            _.each(tree.childs, function(l, lineIdx) { // TODO mirar tot l'arbre
+            _.each(tree.childs, function (l, lineIdx) { // TODO mirar tot l'arbre
                 if (l.class !== "LINE") return;
-                if (! _.contains(l.attributes, rule.applyIdConceptAttribute.toString())) return;
+                if (!_.contains(l.attributes, rule.applyIdConceptAttribute.toString())) return;
                 var dr = daysInRule(l, rule);
-                _.each(dr, function(d) {
-                    var k= lineIdx+'|'+d;
+                _.each(dr, function (d) {
+                    var k = lineIdx + '|' + d;
 
                     var basePrice = l.price;
                     if (typeof l.discount === "number") {
-                        basePrice = basePrice * (1 - l.discount/100);
+                        basePrice = basePrice * (1 - l.discount / 100);
                     }
                     if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
                     if (typeof l.periods !== "number") {
                         basePrice = basePrice / dr.length;
                     }
 
-                    var prc = rule.applyPC *  basePrice / 100;
-                    _.each(appliedCalcPrices, function(od) {
+                    var prc = rule.applyPC * basePrice / 100;
+                    _.each(appliedCalcPrices, function (od) {
                         if (od.pricePerDay === undefined || od.pricePerDay === null) return;
-                        if (! _.contains(od.attributes, rule.applyIdConceptAttribute.toString())) return;
+                        if (!_.contains(od.attributes, rule.applyIdConceptAttribute.toString())) return;
                         if (od.pricePerDay[k]) {
-                            prc = prc +  od.pricePerDay[k] * rule.applyPC/100;
+                            prc = prc + od.pricePerDay[k] * rule.applyPC / 100;
                         }
                     });
 
                     if (typeof pricePerDay[k] === "undefined") {
-                        pricePerDay[k]=prc;
+                        pricePerDay[k] = prc;
                     } else {
                         pricePerDay[k] = Math.min(pricePerDay[k], prc);
                     }
@@ -196,9 +199,9 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         }
         if (rule.applyPrice) {
             var dr = daysInRule(self.line, rule);
-            _.each(dr, function(d) {
+            _.each(dr, function (d) {
                 if (typeof pricePerDayFixed[d] === "undefined") {
-                    pricePerDayFixed[d]=rule.applyPrice;
+                    pricePerDayFixed[d] = rule.applyPrice;
                 } else {
                     pricePerDayFixed[d] = Math.min(rule.applyPrice, pricePerDayFixed[d]);
                 }
@@ -206,23 +209,23 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         }
         if (rule.applyND) {
             mainConceptAttribute = rule.applyIdConceptAttribute.toString();
-            var dr = daysInRule(self.line, rule);
-            _.each(dr, function(d) {
-                discountNights = Math.max(discountNights, rule.applyND);
-            });
+            if (rule.applyND > discountNights) {
+                discountNights = rule.applyND;
+                daysOnDiscountNightsApplies = daysInRule(self.line, rule);
+            }
         }
     });
 
-    var base =0;
+    var base = 0;
 
     // totalImport and base are the total amounts of capcPrices that are applied
     // The VAT is a ponderated average of all the lines ther the calcPrice applies.
 
-    _.each(tree.childs, function(l, lineIdx) {
+    _.each(tree.childs, function (l, lineIdx) {
         if (l.pricePerDay) return;
-        var prc=0;
-        _.each(daysInLine(l), function(d) {
-            var k= lineIdx+'|'+d;
+        var prc = 0;
+        _.each(daysInLine(l), function (d) {
+            var k = lineIdx + '|' + d;
             if (pricePerDay[k]) {
                 prc += pricePerDay[k];
             }
@@ -231,7 +234,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
         base = base + prc;
     });
 
-    _.each(daysInLine(self.line), function(d) {
+    _.each(daysInLine(self.line), function (d) {
         var prc = pricePerDayFixed[d] || 0;
 
         base = base + prc;
@@ -240,13 +243,15 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
     var iCheckin = du.date2int(options.checkin);
     var iCheckout = du.date2int(options.checkout);
     var basePricePerDay = new Array(iCheckout - iCheckin).fill(0);
-    _.each(tree.childs, function(l, lineIdx) {
+    var basePricePerDayAsObject = {};
+
+    _.each(tree.childs, function (l, lineIdx) {
         if (!_.contains(l.attributes, mainConceptAttribute.toString())) return;
         var dr = daysInLine(l);
-        _.each(dr, function(d) {
+        _.each(dr, function (d) {
             var basePrice = l.price;
             if (typeof l.discount === "number") {
-                basePrice = basePrice * (1 - l.discount/100);
+                basePrice = basePrice * (1 - l.discount / 100);
             }
             if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
             if (typeof l.periods !== "number") {
@@ -254,20 +259,34 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
             }
 
             basePricePerDay[d - iCheckin] += basePrice;
+
+            if (basePricePerDayAsObject[d] == null) {
+                basePricePerDayAsObject[d] = 0;
+            }
+            basePricePerDayAsObject[d] += basePrice;
+
         });
     });
-    basePricePerDay.sort(function(a,b) { return a-b});
-    for (var i=0; i<discountNights; i++) {
-        base -= basePricePerDay[i];
+
+    if (discountNights > 0) {
+        const filteredDiscountDayByDay = daysOnDiscountNightsApplies.reduce((acc, discountAppliedDay) => {
+            acc.push(basePricePerDayAsObject[discountAppliedDay]);
+            return acc;
+        }, []).sort(function (a, b) {
+            return a - b
+        });
+        for (let i = 0; i < discountNights; i++) {
+            base -= filteredDiscountDayByDay[i] == null ? 0 : filteredDiscountDayByDay[i];
+        }
     }
 
     var bestLine = _.clone(self.line);
-    base  = priceInterval(self.line.intervals,  base);
+    base = priceInterval(self.line.intervals, base);
 
     bestLine.baseImport = base;
     bestLine.basePrice = base;
     bestLine.import = base;
-    if(!bestLine.price) bestLine.price = base;
+    if (!bestLine.price) bestLine.price = base;
     bestLine.quantity = 1;
     bestLine.class = "LINE";
     bestLine.suborder = self.execSuborder;
@@ -279,7 +298,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
 
     samePhaseCalcPrices.push(bestLine);
 
-    var bestLineInPhase = _.reduce(samePhaseCalcPrices, function(bestLine, line) {
+    var bestLineInPhase = _.reduce(samePhaseCalcPrices, function (bestLine, line) {
         if (!line) return bestLine;
         return (line.import < bestLine.import) ? line : bestLine;
     });
@@ -292,7 +311,7 @@ PriceCalcPrice.prototype.modify = function(tree, options) {
 
     postponedCalcPrices = _.sortBy(postponedCalcPrices, 'phase');
 
-    _.each(postponedCalcPrices, function(l) {
+    _.each(postponedCalcPrices, function (l) {
         var modifier = new PriceCalcPrice(l);
         modifier.apply(tree, options);
     });
