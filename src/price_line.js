@@ -1,25 +1,27 @@
 /*jslint node: true */
 "use strict";
 
-var _=require('lodash');
-
-var PriceLine = function(line) {
+const _ = require('lodash');
+const PriceLine = function(line) {
     this.line = line;
     this.execOrder = line.execOrder || 0;
 };
 
 PriceLine.prototype.modify = function(tree) {
-    var l = _.clone(this.line);
+    const l = _.clone(this.line);
 
-    var price = l.price;
+    if (l.discount) {
+        l.price = l.price * (1 - l.discount/100);
+    }
 
     l.import = l.price * l.quantity;
+
     if (l.periods !== null && !isNaN(l.periods)) {
         l.import = l.import * l.periods;
     }
 
-    if (l.discount) {
-        l.import = l.import * (1 - l.discount/100);
+    if (l.nightsDiscount) {
+        l.import = l.import - (line.price * line.nightsDiscount);
     }
 
     l.baseImport = l.import;
