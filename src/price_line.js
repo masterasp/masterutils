@@ -21,7 +21,7 @@ PriceLine.prototype.modify = function(tree) {
     }
 
     if (l.nightsDiscount) {
-        l.import = l.import - (line.price * line.nightsDiscount);
+        l.import = l.import - (l.price * l.nightsDiscount);
     }
 
     l.baseImport = l.import;
