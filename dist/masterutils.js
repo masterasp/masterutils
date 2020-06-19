@@ -1476,9 +1476,11 @@ PriceCalcPrice.prototype.modify = function (tree, options) {
 
                     var basePrice = l.price;
                     if (typeof l.discount === "number") {
-                        // basePrice = basePrice * (1 - l.discount / 100);
+                        basePrice = basePrice * (1 - l.discount / 100);
                     }
-                    if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
+                    if (typeof l.quantity === "number") {
+                        basePrice = basePrice * l.quantity;
+                    }
                     if (typeof l.periods !== "number") {
                         basePrice = basePrice / dr.length;
                     }
@@ -1554,9 +1556,11 @@ PriceCalcPrice.prototype.modify = function (tree, options) {
         _.each(dr, function (d) {
             var basePrice = l.price;
             if (typeof l.discount === "number") {
-                // basePrice = basePrice * (1 - l.discount / 100);
+                basePrice = basePrice * (1 - l.discount / 100);
             }
-            if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
+            if (typeof l.quantity === "number") {
+                basePrice = basePrice * l.quantity;
+            }
             if (typeof l.periods !== "number") {
                 basePrice = basePrice / dr.length;
             }
@@ -1637,11 +1641,11 @@ const PriceLine = function(line) {
 PriceLine.prototype.modify = function(tree) {
     const l = _.clone(this.line);
 
-    if (l.discount) {
-        l.price = l.price * (1 - l.discount/100);
-    }
-
     l.import = l.price * l.quantity;
+
+    if (l.discount) {
+        l.import = l.import * (1 - l.discount/100);
+    }
 
     if (l.periods !== null && !isNaN(l.periods)) {
         l.import = l.import * l.periods;

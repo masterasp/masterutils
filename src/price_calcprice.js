@@ -173,9 +173,11 @@ PriceCalcPrice.prototype.modify = function (tree, options) {
 
                     var basePrice = l.price;
                     if (typeof l.discount === "number") {
-                        // basePrice = basePrice * (1 - l.discount / 100);
+                        basePrice = basePrice * (1 - l.discount / 100);
                     }
-                    if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
+                    if (typeof l.quantity === "number") {
+                        basePrice = basePrice * l.quantity;
+                    }
                     if (typeof l.periods !== "number") {
                         basePrice = basePrice / dr.length;
                     }
@@ -251,9 +253,11 @@ PriceCalcPrice.prototype.modify = function (tree, options) {
         _.each(dr, function (d) {
             var basePrice = l.price;
             if (typeof l.discount === "number") {
-                // basePrice = basePrice * (1 - l.discount / 100);
+                basePrice = basePrice * (1 - l.discount / 100);
             }
-            if (typeof l.quantity === "number") basePrice = basePrice * l.quantity;
+            if (typeof l.quantity === "number") {
+                basePrice = basePrice * l.quantity;
+            }
             if (typeof l.periods !== "number") {
                 basePrice = basePrice / dr.length;
             }

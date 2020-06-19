@@ -10,11 +10,11 @@ const PriceLine = function(line) {
 PriceLine.prototype.modify = function(tree) {
     const l = _.clone(this.line);
 
-    if (l.discount) {
-        l.price = l.price * (1 - l.discount/100);
-    }
-
     l.import = l.price * l.quantity;
+
+    if (l.discount) {
+        l.import = l.import * (1 - l.discount/100);
+    }
 
     if (l.periods !== null && !isNaN(l.periods)) {
         l.import = l.import * l.periods;
