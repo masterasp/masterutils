@@ -1704,6 +1704,11 @@ module.exports = PriceVatIncluded;
 
 module.exports = function round(val, roundingType, rounding) {
     var v;
+    if (val > 0) {
+        val  = val + 0.0000001;
+    } else {
+        val  = val - 0.0000001;
+    }
     if ((!roundingType) || (roundingType === "NONE")) {
         v = Math.round(val / 0.01) * 0.01;
     } else if ((roundingType === 1) || (roundingType === "FLOOR")) {
