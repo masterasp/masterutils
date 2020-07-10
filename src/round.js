@@ -5,7 +5,8 @@ module.exports = function round(val, roundingType, rounding) {
     var v;
     if (val > 0) {
         val  = val + 0.0000001;
-    } else {
+    }
+    if (val < 0){
         val  = val - 0.0000001;
     }
     if ((!roundingType) || (roundingType === "NONE")) {
